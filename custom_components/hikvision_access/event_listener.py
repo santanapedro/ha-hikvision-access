@@ -81,14 +81,14 @@ class EventListener:
                 self._fail(err, level=logging.ERROR)
                 self._gateway.listener_state = "error"
                 await self._sleep(60)
-            except (HikvisionError, asyncio.TimeoutError, OSError) as err:
+            except (TimeoutError, HikvisionError, OSError) as err:
                 self._fail(err)
                 delay = RECONNECT_BACKOFF_S[min(attempt, len(RECONNECT_BACKOFF_S) - 1)]
                 attempt += 1
                 await self._sleep(delay)
             except asyncio.CancelledError:
                 raise
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("listener crashed for %s", self._device_id)
                 await self._sleep(30)
 
@@ -140,7 +140,7 @@ class EventListener:
             return
         try:
             await self._gateway.async_handle(event, source="stream")
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("failed handling live event %s", event.event_uid)
 
     def _fail(self, err: object, level: int = logging.DEBUG) -> None:

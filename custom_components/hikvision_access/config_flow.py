@@ -11,7 +11,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -114,7 +113,7 @@ class HikvisionAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "timeout"
             except HikvisionConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected error probing %s", data[CONF_HOST])
                 errors["base"] = "unknown"
             else:

@@ -60,7 +60,6 @@ class HikvisionHealthCoordinator(DataUpdateCoordinator[HealthData]):
         status = raw.get("AcsWorkStatus", raw)
         lock = _first(status.get("doorLockStatus"))
         door = _first(status.get("doorStatus"))
-        mag = _first(status.get("magneticStatus"))
         return HealthData(
             reachable=True,
             door_locked=None if lock is None else lock == 0,

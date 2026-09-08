@@ -1,9 +1,8 @@
 """SQLite store: dedupe, serial tracking, retention, queries."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from hikvision_access.models import AccessEvent
 from hikvision_access.storage import EventStore, compute_event_uid
 
@@ -23,21 +22,21 @@ async def store(tmp_path):
 
 
 async def test_dedupe(store):
-    ts = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    ts = datetime(2026, 9, 1, tzinfo=UTC)
     ev = _event("d1:100", "100", ts, access_result="granted")
     assert await store.async_insert_event(ev) is True
     assert await store.async_insert_event(ev) is False  # same uid
 
 
 async def test_max_serial_tracks_highest(store):
-    ts = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    ts = datetime(2026, 9, 1, tzinfo=UTC)
     for s in (10, 5, 42, 7):
         await store.async_insert_event(_event(f"d1:{s}", str(s), ts))
     assert await store.async_max_serial("d1") == 42
 
 
 async def test_query_filters_and_cursor(store):
-    base = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    base = datetime(2026, 9, 1, tzinfo=UTC)
     for i in range(5):
         await store.async_insert_event(
             _event(
@@ -60,7 +59,7 @@ async def test_query_filters_and_cursor(store):
 
 
 async def test_update_fields_and_person_cache(store):
-    ts = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    ts = datetime(2026, 9, 1, tzinfo=UTC)
     await store.async_insert_event(_event("d1:1", "1", ts, person_id="25"))
     await store.async_update_event_fields("d1:1", person_name="Fulano",
                                           event_picture_path="/x/y.jpg")
@@ -78,11 +77,11 @@ async def test_update_fields_and_person_cache(store):
 
 
 async def test_retention_purge_returns_paths(store):
-    old = datetime.now(timezone.utc) - timedelta(days=200)
-    new = datetime.now(timezone.utc)
+    old = datetime.now(UTC) - timedelta(days=200)
+    new = datetime.now(UTC)
     await store.async_insert_event(_event("d1:1", "1", old, event_picture_path="/old.jpg"))
     await store.async_insert_event(_event("d1:2", "2", new, event_picture_path="/new.jpg"))
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
+    cutoff = (datetime.now(UTC) - timedelta(days=90)).isoformat()
     paths = await store.async_purge_images_before(cutoff)
     assert paths == ["/old.jpg"]
     assert (await store.async_get_event("d1:1"))["event_picture_path"] is None
@@ -90,7 +89,7 @@ async def test_retention_purge_returns_paths(store):
 
 
 def test_compute_event_uid_prefers_native_serial():
-    ts = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    ts = datetime(2026, 9, 1, tzinfo=UTC)
     assert compute_event_uid("SER", native_serial=99, major=5, minor=75,
                               timestamp=ts, person_id="1") == "SER:99"
     h = compute_event_uid("SER", native_serial=None, major=5, minor=75,

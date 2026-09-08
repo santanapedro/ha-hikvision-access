@@ -42,11 +42,11 @@ def test_acs_door_event_has_no_person():
 def test_stream_envelope_from_real_multipart():
     raw = (FIX / "alertStream.sample.txt").read_bytes()
     boundary = "MIME_boundary"
-    sections, remainder = split_stream_buffer(raw, boundary)
+    sections, _remainder = split_stream_buffer(raw, boundary)
     assert sections, "should have parsed complete sections"
 
     parsed = []
-    for headers, content in sections:
+    for _headers, content in sections:
         if content[:1] != b"{":
             continue
         env = json.loads(content.decode("utf-8", "replace"))

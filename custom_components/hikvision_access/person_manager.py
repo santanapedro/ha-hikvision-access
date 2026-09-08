@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from .api import HikvisionISAPIClient
 from .exceptions import HikvisionError
@@ -110,5 +110,5 @@ def _fresh(updated_at: str | None) -> bool:
     except ValueError:
         return False
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=timezone.utc)
-    return datetime.now(timezone.utc) - ts.astimezone(timezone.utc) < _TTL
+        ts = ts.replace(tzinfo=UTC)
+    return datetime.now(UTC) - ts.astimezone(UTC) < _TTL

@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import HikvisionAccessEntry
 from .const import (
@@ -201,15 +202,18 @@ class HikvisionEventsTodaySensor(HikvisionAccessEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         await self._refresh()
+
+        @callback
+        def _schedule(_event: AccessEvent) -> None:
+            self.hass.async_create_task(self._refresh())
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, signal_access(self._entry_id), lambda _e: self.hass.async_create_task(self._refresh())
+                self.hass, signal_access(self._entry_id), _schedule
             )
         )
 
     async def _refresh(self) -> None:
-        from homeassistant.util import dt as dt_util
-
         start = dt_util.start_of_local_day()
         self._value = await self._store.async_count_today(
             self._info.serial_number, start.isoformat()

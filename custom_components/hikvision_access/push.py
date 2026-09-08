@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .api import HikvisionISAPIClient
-from .const import DOMAIN
 from .event_parser import parse_push_body
 from .exceptions import HikvisionError
 from .gateway import EventGateway
@@ -89,7 +88,7 @@ class HikvisionPushView(HomeAssistantView):
                 door_name=target["door"],
                 mask_card=target["gateway"].mask_card,
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("failed parsing push body (%d bytes)", len(body))
             return web.Response(status=200)  # never make the terminal retry-storm
 

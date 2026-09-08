@@ -12,11 +12,11 @@ import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
 
-from homeassistant.config_entries import ConfigEntryState  # noqa: E402
-from homeassistant.core import HomeAssistant  # noqa: E402
-from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: E402
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.hikvision_access.const import (  # noqa: E402
+from custom_components.hikvision_access.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -25,7 +25,7 @@ from custom_components.hikvision_access.const import (  # noqa: E402
     CONF_VERIFY_SSL,
     DOMAIN,
 )
-from custom_components.hikvision_access.models import (  # noqa: E402
+from custom_components.hikvision_access.models import (
     DeviceCapabilities,
     DeviceInfo,
 )

@@ -12,7 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from . import HikvisionAccessEntry
 from .entity import HikvisionAccessEntity
-from .event_mapper import EventMapping
 from .gateway import EventGateway, signal_access
 from .models import AccessEvent
 

@@ -3,11 +3,8 @@
 import hashlib
 
 import pytest
-
-from hikvision_access.api import _Digest, _xml_to_dict
+from hikvision_access.api import HikvisionISAPIClient, _Digest, _xml_to_dict
 from hikvision_access.exceptions import HikvisionLockoutError, HikvisionProtocolError
-from hikvision_access.api import HikvisionISAPIClient
-
 
 CHALLENGE = (
     'Digest qop="auth", realm="DS-6E392E44", '

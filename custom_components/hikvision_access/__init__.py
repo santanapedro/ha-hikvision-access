@@ -291,7 +291,7 @@ async def _daily_purge(runtime: HikvisionAccessRuntime) -> None:
         removed = await runtime.images.async_purge(runtime.store)
         if removed:
             _LOGGER.info("purged %d expired image(s)", removed)
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.exception("image purge failed")
 
 

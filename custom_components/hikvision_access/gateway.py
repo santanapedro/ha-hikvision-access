@@ -10,12 +10,9 @@ stream listener / push view / reconciler  ->  EventGateway.async_handle()
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
-from datetime import datetime
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,

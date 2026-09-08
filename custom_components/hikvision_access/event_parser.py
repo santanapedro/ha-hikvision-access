@@ -17,7 +17,7 @@ import json
 import logging
 import re
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from .const import (
@@ -31,13 +31,13 @@ from .storage import compute_event_uid
 from .util import loads_hik
 
 __all__ = [
-    "loads_hik",
-    "parse_boundary",
     "iter_multipart",
-    "parse_timestamp",
+    "loads_hik",
     "parse_acs_search_item",
-    "parse_stream_envelope",
+    "parse_boundary",
     "parse_push_body",
+    "parse_stream_envelope",
+    "parse_timestamp",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,15 +113,15 @@ def split_stream_buffer(
 def parse_timestamp(value: str | None) -> datetime:
     """ISO-8601 (with or without offset) -> timezone-aware UTC datetime."""
     if not value:
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
     try:
         dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         _LOGGER.debug("unparseable timestamp %r, using now()", value)
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 # --------------------------------------------------------------------------

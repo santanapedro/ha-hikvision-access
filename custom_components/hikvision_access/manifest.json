@@ -1,13 +1,13 @@
 {
   "domain": "hikvision_access",
   "name": "Hikvision Access",
-  "codeowners": [],
+  "codeowners": ["@santanapedro"],
   "config_flow": true,
   "dependencies": ["http", "websocket_api"],
   "documentation": "https://github.com/santanapedro/ha-hikvision-access",
-  "issue_tracker": "https://github.com/santanapedro/ha-hikvision-access/issues",
   "integration_type": "hub",
   "iot_class": "local_push",
+  "issue_tracker": "https://github.com/santanapedro/ha-hikvision-access/issues",
   "requirements": [],
   "version": "0.1.0"
 }

@@ -7,7 +7,7 @@ import logging
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DATA_PUSH_SLOT, DOMAIN
 from .exceptions import HikvisionError
@@ -48,7 +48,9 @@ def _resolve_entry(hass: HomeAssistant, call: ServiceCall):
             entry_id = entries[0].entry_id
     entry = hass.config_entries.async_get_entry(entry_id) if entry_id else None
     if entry is None or getattr(entry, "runtime_data", None) is None:
-        raise ServiceValidationError("Terminal Hikvision Access não encontrado para o alvo informado.")
+        raise ServiceValidationError(
+            "Terminal Hikvision Access não encontrado para o alvo informado."
+        )
     return entry
 
 

@@ -64,7 +64,7 @@ def _xml_to_dict(text: str) -> dict[str, Any]:
 class _Digest:
     """Minimal RFC 2617 Digest (qop=auth, MD5) — what these terminals use."""
 
-    __slots__ = ("username", "password", "realm", "nonce", "opaque", "qop", "_nc")
+    __slots__ = ("_nc", "nonce", "opaque", "password", "qop", "realm", "username")
 
     def __init__(self, username: str, password: str) -> None:
         self.username = username
@@ -175,7 +175,7 @@ class HikvisionISAPIClient:
                     raise HikvisionAuthError("credentials rejected")
         except aiohttp.ClientConnectorError as err:
             raise HikvisionConnectionError(str(err)) from err
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise HikvisionTimeoutError(f"{method} {endpoint} timed out") from err
         except aiohttp.ClientError as err:
             raise HikvisionConnectionError(str(err)) from err
@@ -330,8 +330,8 @@ class HikvisionISAPIClient:
     async def async_get_bytes(self, url_or_path: str) -> bytes:
         """Download an event/user picture. Accepts an absolute URL or a path."""
         endpoint = url_or_path
-        if url_or_path.startswith("http"):
-            endpoint = url_or_path.split(self._host, 1)[-1] if self._host in url_or_path else url_or_path
+        if url_or_path.startswith("http") and self._host in url_or_path:
+            endpoint = url_or_path.split(self._host, 1)[-1]
         resp = await self._request("GET", endpoint)
         try:
             return await resp.read()
@@ -381,7 +381,12 @@ class HikvisionISAPIClient:
             body = await resp.text()
         finally:
             resp.release()
-        if "<statusCode>1</statusCode>" not in body and '"statusCode":\t1' not in body and "OK" not in body:
+        acknowledged = (
+            "<statusCode>1</statusCode>" in body
+            or '"statusCode":\t1' in body
+            or "OK" in body
+        )
+        if not acknowledged:
             raise HikvisionProtocolError(f"door command not acknowledged: {body[:200]}")
 
     async def async_probe_stream(self, endpoint: str) -> bool:
@@ -398,7 +403,7 @@ class HikvisionISAPIClient:
                     self._raise_if_locked(await resp.text())
                     raise HikvisionAuthError("stream auth rejected")
                 return resp.status == 200
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return True  # connected, just no data yet — the stream exists
         except aiohttp.ClientError:
             return False

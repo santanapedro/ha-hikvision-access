@@ -9,6 +9,7 @@ gateway — dedupe there drops anything already seen.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import uuid
 from datetime import timedelta
@@ -120,10 +121,8 @@ class EventReconciler:
                 )
                 if await self._gateway.async_handle(event, source="reconcile"):
                     new_count += 1
-                try:
+                with contextlib.suppress(TypeError, ValueError):
                     highest = max(highest, int(item.get("serialNo", 0)))
-                except (TypeError, ValueError):
-                    pass
             position += len(infos)
             if page.get("responseStatusStrg") != "MORE":
                 break
