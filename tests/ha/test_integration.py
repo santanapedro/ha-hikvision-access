@@ -14,6 +14,7 @@ pytest.importorskip("pytest_homeassistant_custom_component")
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hikvision_access.const import (
@@ -75,6 +76,13 @@ def _bypass_probe():
             "custom_components.hikvision_access.event_reconciler.EventReconciler.async_start",
             AsyncMock(),
         ),
+        patch(
+            "custom_components.hikvision_access.EventListener.start",
+        ),
+        patch(
+            "custom_components.hikvision_access.event_listener.EventListener.async_stop",
+            AsyncMock(),
+        ),
     ):
         yield info, caps
 
@@ -102,15 +110,17 @@ async def test_setup_and_unload(hass: HomeAssistant, _bypass_probe) -> None:
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    # entities exist
-    assert hass.states.get("event.leiteste_acesso") is not None
-    assert hass.states.get("binary_sensor.leiteste_online") is not None
-    assert hass.states.get("button.leiteste_abrir_porta") is not None
-    assert hass.states.get("sensor.leiteste_status_da_conexao") is not None
+    # entities were created across every platform
+    entities = er.async_get(hass).entities.get_entries_for_config_entry_id(
+        entry.entry_id
+    )
+    domains = {e.domain for e in entities}
+    assert {"event", "image", "binary_sensor", "button", "sensor"} <= domains
+    assert len(entities) >= 10
 
     # services registered
-    assert hass.services.has_service(DOMAIN, "open_door")
-    assert hass.services.has_service(DOMAIN, "reconcile_now")
+    for svc in ("open_door", "reconcile_now", "sync_persons", "setup_push", "remove_push"):
+        assert hass.services.has_service(DOMAIN, svc)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
