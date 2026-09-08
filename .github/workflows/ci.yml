@@ -19,7 +19,7 @@ jobs:
       - name: Unit tests (no HA)
         run: pytest -q
       - name: HA lifecycle tests
-        run: pytest tests/ha -q -p pytest_homeassistant_custom_component
+        run: pytest tests/ha -q --override-ini addopts=
 
   hassfest:
     runs-on: ubuntu-latest
