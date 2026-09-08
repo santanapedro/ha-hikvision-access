@@ -1,0 +1,19 @@
+# local device credentials — never commit
+tools/device.local.json
+
+# discovery output (may contain PII even after redaction — review before sharing)
+tools/output/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# editor
+.vscode/
+.idea/
+
+# HA test venv (local only)
+.venv-ha/
+.venv*/

@@ -1,0 +1,150 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hikvision Access",
+        "description": "Dados do terminal de controle de acesso na rede local.",
+        "data": {
+          "host": "Endereço IP ou hostname",
+          "port": "Porta (padrão 443 HTTPS / 80 HTTP)",
+          "username": "Usuário ISAPI",
+          "password": "Senha",
+          "use_https": "Usar HTTPS",
+          "verify_ssl": "Validar certificado SSL",
+          "name": "Nome (opcional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Não foi possível conectar ao terminal.",
+      "invalid_auth": "Usuário ou senha inválidos.",
+      "lockout": "O terminal bloqueou logins temporariamente por excesso de tentativas. Aguarde e tente de novo.",
+      "timeout": "Tempo de resposta esgotado.",
+      "unknown": "Erro inesperado."
+    },
+    "abort": {
+      "already_configured": "Este terminal já está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções — Hikvision Access",
+        "description": "A rota 'push' precisa que o terminal envie eventos ao Home Assistant; ligue 'Registrar push no terminal' para configurar um slot livre automaticamente.",
+        "data": {
+          "event_route": "Rota de eventos (push recomendado)",
+          "register_push_on_device": "Registrar push no terminal (grava um slot httpHosts)",
+          "also_run_stream": "Manter também o alertStream ativo",
+          "reconcile_interval_s": "Intervalo de reconciliação (s)",
+          "image_retention_days": "Retenção de imagens (dias, 0 = ilimitado)",
+          "store_granted_images": "Salvar fotos de acessos permitidos",
+          "store_denied_images": "Salvar fotos de acessos negados",
+          "store_raw_payload": "Salvar payload bruto do evento",
+          "create_open_door_button": "Criar botão de abrir porta",
+          "mask_card_number": "Mascarar número do cartão"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "online": { "name": "Online" },
+      "door": { "name": "Porta" },
+      "tamper": { "name": "Violação" }
+    },
+    "sensor": {
+      "connection_status": {
+        "name": "Status da conexão",
+        "state": {
+          "connected": "Conectado",
+          "degraded": "Degradado",
+          "offline": "Offline",
+          "authentication_error": "Erro de autenticação"
+        }
+      },
+      "firmware": { "name": "Firmware" },
+      "events_today": { "name": "Acessos hoje" },
+      "last_access_user": { "name": "Último acesso — pessoa" },
+      "last_access_time": { "name": "Último acesso — horário" },
+      "last_access_result": {
+        "name": "Último acesso — resultado",
+        "state": { "granted": "Permitido", "denied": "Negado", "unknown": "Desconhecido" }
+      },
+      "last_auth_method": {
+        "name": "Último acesso — método",
+        "state": {
+          "face": "Facial", "card": "Cartão", "fingerprint": "Digital", "qr": "QR Code",
+          "password": "Senha", "remote": "Remoto", "button": "Botão",
+          "other": "Outro", "unknown": "Desconhecido"
+        }
+      },
+      "last_door": { "name": "Último acesso — porta" }
+    },
+    "button": {
+      "open_door": { "name": "Abrir porta" }
+    },
+    "event": {
+      "access": {
+        "name": "Acesso",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "access_granted": "Acesso permitido",
+              "access_denied": "Acesso negado",
+              "door_opened": "Porta aberta",
+              "door_closed": "Porta fechada",
+              "tamper": "Violação",
+              "device_alarm": "Alarme do dispositivo"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "last_access": { "name": "Última foto de acesso" }
+    }
+  },
+  "services": {
+    "open_door": {
+      "name": "Abrir porta",
+      "description": "Libera a porta do terminal momentaneamente.",
+      "fields": {
+        "device_id": { "name": "Dispositivo", "description": "Terminal alvo." },
+        "entry_id": { "name": "ID da integração", "description": "Alternativa ao dispositivo." },
+        "door": { "name": "Porta", "description": "Número da porta (normalmente 1)." }
+      }
+    },
+    "reconcile_now": {
+      "name": "Reconciliar agora",
+      "description": "Força uma varredura do histórico do terminal.",
+      "fields": {
+        "device_id": { "name": "Dispositivo", "description": "Terminal alvo." },
+        "entry_id": { "name": "ID da integração", "description": "Alternativa ao dispositivo." }
+      }
+    },
+    "sync_persons": {
+      "name": "Sincronizar pessoas",
+      "description": "Carrega todos os usuários cadastrados no terminal para o cache local.",
+      "fields": {
+        "device_id": { "name": "Dispositivo", "description": "Terminal alvo." },
+        "entry_id": { "name": "ID da integração", "description": "Alternativa ao dispositivo." }
+      }
+    },
+    "setup_push": {
+      "name": "Configurar push no terminal",
+      "description": "Grava um slot httpHosts livre do terminal apontando para o Home Assistant.",
+      "fields": {
+        "device_id": { "name": "Dispositivo", "description": "Terminal alvo." },
+        "entry_id": { "name": "ID da integração", "description": "Alternativa ao dispositivo." }
+      }
+    },
+    "remove_push": {
+      "name": "Remover push do terminal",
+      "description": "Libera o slot httpHosts que o Home Assistant havia registrado.",
+      "fields": {
+        "device_id": { "name": "Dispositivo", "description": "Terminal alvo." },
+        "entry_id": { "name": "ID da integração", "description": "Alternativa ao dispositivo." }
+      }
+    }
+  }
+}

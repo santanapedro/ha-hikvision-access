@@ -1,0 +1,838 @@
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 652
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:26:22-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	2,
+		"subEventType":	1024,
+		"verifyNo":	128,
+		"serialNo":	1,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	0,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 669
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:26:24-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	23,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	2,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	1,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 669
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:26:24-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	21,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	3,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	2,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 669
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:26:29-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	22,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	4,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	3,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 650
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:26:29-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	2,
+		"subEventType":	39,
+		"verifyNo":	136,
+		"serialNo":	5,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	4,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 651
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:29:41-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	240,
+		"verifyNo":	138,
+		"serialNo":	6,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	5,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 652
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:30:40-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	2,
+		"subEventType":	1031,
+		"verifyNo":	140,
+		"serialNo":	7,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	6,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 650
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:31:02-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	2,
+		"subEventType":	39,
+		"verifyNo":	142,
+		"serialNo":	8,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	7,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 652
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:31:02-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	2,
+		"subEventType":	1031,
+		"verifyNo":	144,
+		"serialNo":	9,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	8,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 690
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:34:16-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	112,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	146,
+		"serialNo":	10,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	9,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 691
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:35:03-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	112,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	148,
+		"serialNo":	11,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	10,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 691
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:35:03-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	113,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	150,
+		"serialNo":	12,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	11,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 691
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:35:03-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	112,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	152,
+		"serialNo":	13,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	12,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 691
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:35:04-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	113,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	154,
+		"serialNo":	14,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	13,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 654
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:35:23-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	1078,
+		"verifyNo":	156,
+		"serialNo":	15,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	14,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 654
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-21T22:35:56-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	1029,
+		"verifyNo":	158,
+		"serialNo":	16,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	15,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:37:34-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	21,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	17,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	16,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 868
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:37:34-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	75,
+		"name":	"REDACTED_NAME",
+		"cardReaderKind":	1,
+		"cardReaderNo":	1,
+		"verifyNo":	162,
+		"employeeNoString":	"REDACTED_EMP",
+		"serialNo":	18,
+		"userType":	"normal",
+		"currentVerifyMode":	"cardOrFace",
+		"currentEvent":	false,
+		"frontSerialNo":	17,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"no",
+		"purePwdVerifyEnable":	true,
+		"FaceRect":	{
+			"height":	0.196,
+			"width":	0.111,
+			"x":	0.5,
+			"y":	0.049
+		}
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:37:39-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	22,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	19,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	18,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 691
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:39:14-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	3,
+		"subEventType":	112,
+		"remoteHostAddr":	"192.0.2.100",
+		"verifyNo":	166,
+		"serialNo":	20,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	19,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:23-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	21,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	21,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	20,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 870
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:23-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	75,
+		"name":	"REDACTED_NAME",
+		"cardReaderKind":	1,
+		"cardReaderNo":	1,
+		"verifyNo":	170,
+		"employeeNoString":	"REDACTED_EMP",
+		"serialNo":	22,
+		"userType":	"normal",
+		"currentVerifyMode":	"cardOrFace",
+		"currentEvent":	false,
+		"frontSerialNo":	21,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"no",
+		"purePwdVerifyEnable":	true,
+		"FaceRect":	{
+			"height":	0.204,
+			"width":	0.115,
+			"x":	0.532,
+			"y":	0.077
+		}
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:28-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	22,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	23,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	22,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:36-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	21,
+		"cardReaderKind":	1,
+		"doorNo":	1,
+		"serialNo":	24,
+		"currentVerifyMode":	"invalid",
+		"currentEvent":	false,
+		"frontSerialNo":	23,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"unknown",
+		"purePwdVerifyEnable":	true
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 870
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:36-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"AccessControllerEvent":	{
+		"deviceName":	"LEITOR FUNDOS",
+		"majorEventType":	5,
+		"subEventType":	75,
+		"name":	"REDACTED_NAME",
+		"cardReaderKind":	1,
+		"cardReaderNo":	1,
+		"verifyNo":	176,
+		"employeeNoString":	"REDACTED_EMP",
+		"serialNo":	25,
+		"userType":	"normal",
+		"currentVerifyMode":	"cardOrFace",
+		"currentEvent":	false,
+		"frontSerialNo":	24,
+		"attendanceStatus":	"undefined",
+		"label":	"",
+		"statusValue":	0,
+		"mask":	"no",
+		"purePwdVerifyEnable":	true,
+		"FaceRect":	{
+			"height":	0.197,
+			"width":	0.112,
+			"x":	0.378,
+			"y":	0.078
+		}
+	}
+}
+--MIME_boundary
+Content-Type: application/json; charset="UTF-8"
+Content-Length: 671
+
+{
+	"ipAddress":	"192.0.2.10",
+	"portNo":	443,
+	"protocol":	"HTTPS",
+	"macAddress":	"AA:BB:CC:DD:EE:FF",
+	"channelID":	1,
+	"dateTime":	"2025-06-22T10:44:41-04:00",
+	"activePostCount":	1,
+	"eventType":	"AccessControllerEvent",
+	"eventState":	"active",
+	"eventDescription":	"Access Controller Event",
+	"Ac

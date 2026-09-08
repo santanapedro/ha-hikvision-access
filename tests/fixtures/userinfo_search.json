@@ -1,0 +1,169 @@
+{
+	"UserInfoSearch":	{
+		"searchID":	"bb58004e-a217-4d0c-83c5-df7b3926a5db",
+		"responseStatusStrg":	"MORE",
+		"numOfMatches":	5,
+		"totalMatches":	7,
+		"UserInfo":	[{
+				"employeeNo":	"REDACTED_EMP",
+				"name":	"REDACTED_NAME",
+				"userType":	"normal",
+				"sortByNamePosition":	0,
+				"sortByNameFlag":	"#",
+				"closeDelayEnabled":	false,
+				"Valid":	{
+					"enable":	true,
+					"beginTime":	"2025-03-28T00:00:00",
+					"endTime":	"2035-03-28T23:59:59",
+					"timeType":	"local"
+				},
+				"belongGroup":	"",
+				"password":	"",
+				"doorRight":	"1",
+				"RightPlan":	[{
+						"doorNo":	1,
+						"planTemplateNo":	"1"
+					}],
+				"maxOpenDoorTime":	0,
+				"openDoorTime":	0,
+				"roomNumber":	0,
+				"floorNumber":	0,
+				"localUIRight":	false,
+				"gender":	"male",
+				"numOfCard":	0,
+				"numOfFace":	1,
+				"PersonInfoExtends":	[{
+						"value":	""
+					}],
+				"faceURL":	"https://DEVICE_HOST/LOCALS/pic/enrlFace/0/0000000001.jpg@WEB000000000015"
+			}, {
+				"employeeNo":	"REDACTED_EMP",
+				"name":	"REDACTED_NAME",
+				"userType":	"normal",
+				"sortByNamePosition":	1,
+				"sortByNameFlag":	"#",
+				"closeDelayEnabled":	false,
+				"Valid":	{
+					"enable":	true,
+					"beginTime":	"2025-06-23T00:00:00",
+					"endTime":	"2035-06-23T00:00:00",
+					"timeType":	"local"
+				},
+				"belongGroup":	"",
+				"password":	"",
+				"doorRight":	"1",
+				"RightPlan":	[{
+						"doorNo":	1,
+						"planTemplateNo":	"1"
+					}],
+				"maxOpenDoorTime":	0,
+				"openDoorTime":	0,
+				"roomNumber":	0,
+				"floorNumber":	0,
+				"localUIRight":	false,
+				"gender":	"unknown",
+				"numOfCard":	0,
+				"numOfFace":	1,
+				"PersonInfoExtends":	[{
+						"value":	""
+					}],
+				"faceURL":	"https://DEVICE_HOST/LOCALS/pic/enrlFace/0/0000000003.jpg@WEB000000000016"
+			}, {
+				"employeeNo":	"REDACTED_EMP",
+				"name":	"REDACTED_NAME",
+				"userType":	"normal",
+				"sortByNamePosition":	2,
+				"sortByNameFlag":	"#",
+				"closeDelayEnabled":	false,
+				"Valid":	{
+					"enable":	true,
+					"beginTime":	"2025-10-21T00:00:00",
+					"endTime":	"2035-10-21T00:00:00",
+					"timeType":	"local"
+				},
+				"belongGroup":	"",
+				"password":	"",
+				"doorRight":	"1",
+				"RightPlan":	[{
+						"doorNo":	1,
+						"planTemplateNo":	"1"
+					}],
+				"maxOpenDoorTime":	0,
+				"openDoorTime":	0,
+				"roomNumber":	0,
+				"floorNumber":	0,
+				"localUIRight":	false,
+				"gender":	"unknown",
+				"numOfCard":	0,
+				"numOfFace":	1,
+				"PersonInfoExtends":	[{
+						"value":	""
+					}],
+				"faceURL":	"https://DEVICE_HOST/LOCALS/pic/enrlFace/0/0000000006.jpg@WEB000000000017"
+			}, {
+				"employeeNo":	"REDACTED_EMP",
+				"name":	"REDACTED_NAME",
+				"userType":	"normal",
+				"sortByNamePosition":	3,
+				"sortByNameFlag":	"#",
+				"closeDelayEnabled":	false,
+				"Valid":	{
+					"enable":	true,
+					"beginTime":	"2025-12-10T00:00:00",
+					"endTime":	"2035-12-10T23:59:59",
+					"timeType":	"local"
+				},
+				"belongGroup":	"",
+				"password":	"",
+				"doorRight":	"1",
+				"RightPlan":	[{
+						"doorNo":	1,
+						"planTemplateNo":	"1"
+					}],
+				"maxOpenDoorTime":	0,
+				"openDoorTime":	0,
+				"roomNumber":	0,
+				"floorNumber":	0,
+				"localUIRight":	false,
+				"gender":	"unknown",
+				"numOfCard":	0,
+				"numOfFace":	1,
+				"PersonInfoExtends":	[{
+						"value":	""
+					}],
+				"faceURL":	"https://DEVICE_HOST/LOCALS/pic/enrlFace/0/0000000008.jpg@WEB000000000018"
+			}, {
+				"employeeNo":	"REDACTED_EMP",
+				"name":	"REDACTED_NAME",
+				"userType":	"normal",
+				"sortByNamePosition":	4,
+				"sortByNameFlag":	"#",
+				"closeDelayEnabled":	false,
+				"Valid":	{
+					"enable":	true,
+					"beginTime":	"2026-04-10T00:00:00",
+					"endTime":	"2037-12-31T23:59:59",
+					"timeType":	"local"
+				},
+				"belongGroup":	"",
+				"password":	"",
+				"doorRight":	"1",
+				"RightPlan":	[{
+						"doorNo":	1,
+						"planTemplateNo":	"1"
+					}],
+				"maxOpenDoorTime":	0,
+				"openDoorTime":	0,
+				"roomNumber":	0,
+				"floorNumber":	0,
+				"localUIRight":	false,
+				"gender":	"unknown",
+				"numOfCard":	0,
+				"numOfFace":	1,
+				"PersonInfoExtends":	[{
+						"value":	""
+					}],
+				"faceURL":	"https://DEVICE_HOST/LOCALS/pic/enrlFace/0/0000000002.jpg@WEB000000000019"
+			}]
+	}
+}

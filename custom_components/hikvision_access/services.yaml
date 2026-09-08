@@ -1,0 +1,60 @@
+open_door:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: hikvision_access
+    entry_id:
+      required: false
+      example: "01J..."
+      selector:
+        text:
+    door:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 8
+          mode: box
+
+reconcile_now:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: hikvision_access
+    entry_id:
+      selector:
+        text:
+
+sync_persons:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: hikvision_access
+    entry_id:
+      selector:
+        text:
+
+setup_push:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: hikvision_access
+    entry_id:
+      selector:
+        text:
+
+remove_push:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: hikvision_access
+    entry_id:
+      selector:
+        text:
