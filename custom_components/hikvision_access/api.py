@@ -118,6 +118,11 @@ class _Digest:
 class HikvisionISAPIClient:
     """One authenticated client for one terminal."""
 
+    # host -> monotonic time the lockout clears. Shared across client
+    # instances so a fresh client (e.g. a config-entry setup retry) still
+    # respects a lock a previous client discovered.
+    _lockouts: dict[str, float] = {}
+
     def __init__(
         self,
         session: aiohttp.ClientSession,
@@ -144,13 +149,11 @@ class HikvisionISAPIClient:
         self._min_spacing = 0.05
         self._last_request = 0.0
         self._pace_lock = asyncio.Lock()
-        # When the terminal locks us out, stop touching it entirely until the
-        # window passes — otherwise every poller keeps the lock alive.
-        self._locked_until = 0.0
 
     @property
     def lock_remaining(self) -> int:
-        return max(0, int(self._locked_until - time.monotonic()))
+        until = self._lockouts.get(self._host, 0.0)
+        return max(0, int(until - time.monotonic()))
 
     def _check_lock(self) -> None:
         remaining = self.lock_remaining
@@ -158,8 +161,11 @@ class HikvisionISAPIClient:
             raise HikvisionLockoutError(remaining)
 
     def _note_lock(self, unlock_seconds: int | None) -> None:
-        wait = unlock_seconds if unlock_seconds and unlock_seconds > 0 else 300
-        self._locked_until = max(self._locked_until, time.monotonic() + wait)
+        # add margin: the terminal extends the lock on every attempt during it
+        wait = (unlock_seconds if unlock_seconds and unlock_seconds > 0 else 300) + 30
+        self._lockouts[self._host] = max(
+            self._lockouts.get(self._host, 0.0), time.monotonic() + wait
+        )
 
     async def _pace(self) -> None:
         async with self._pace_lock:
