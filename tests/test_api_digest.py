@@ -75,6 +75,14 @@ def test_no_lockout_on_normal_body():
     HikvisionISAPIClient._raise_if_locked("<DeviceInfo><model>X</model></DeviceInfo>")
 
 
+def test_unlock_status_is_not_a_lockout():
+    # "<lockStatus>unlock</lockStatus>" contains the substring "lock"
+    HikvisionISAPIClient._raise_if_locked(
+        "<userCheck><lockStatus>unlock</lockStatus>"
+        "<retryLoginTime>4</retryLoginTime></userCheck>"
+    )
+
+
 def test_xml_to_dict_strips_namespace():
     xml = (
         '<DeviceInfo version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">'

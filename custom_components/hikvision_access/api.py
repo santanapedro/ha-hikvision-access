@@ -37,6 +37,7 @@ from .const import (
 from .exceptions import (
     HikvisionAuthError,
     HikvisionConnectionError,
+    HikvisionError,
     HikvisionLockoutError,
     HikvisionProtocolError,
     HikvisionTimeoutError,
@@ -131,8 +132,11 @@ class HikvisionISAPIClient:
         self._session = session
         self._base = f"{scheme}://{host}:{port}"
         self._host = host
+        self._username = username
+        self._password = password
         self._timeout = timeout
         self._digest = _Digest(username, password)
+        self._digest_epoch = 0  # bumps every time a fresh challenge is loaded
         self._auth_lock = asyncio.Lock()
 
     # ---- low level -------------------------------------------------------
@@ -158,39 +162,43 @@ class HikvisionISAPIClient:
 
         to = aiohttp.ClientTimeout(total=timeout or self._timeout)
 
-        async def _send() -> aiohttp.ClientResponse:
+        async def _send() -> tuple[aiohttp.ClientResponse, int]:
             hdrs = dict(headers)
-            if self._digest.nonce:
-                async with self._auth_lock:
+            async with self._auth_lock:
+                epoch = self._digest_epoch
+                if self._digest.nonce:
                     hdrs["Authorization"] = self._digest.header(method, uri)
-            return await self._session.request(
+            resp = await self._session.request(
                 method, url, data=data, headers=hdrs, timeout=to
             )
+            return resp, epoch
 
         try:
-            resp = await _send()
-            # A 401 is usually just the terminal ageing out the Digest nonce.
-            # Recover: reload a fresh challenge (or drop a stale nonce so the
-            # next attempt goes unauthenticated and gets one) and retry. Only a
-            # <userCheck> body (device evaluated the credentials) or a lockout
-            # means the credentials themselves are the problem.
+            resp, epoch = await _send()
+            # 401 semantics on this firmware:
+            #   * WWW-Authenticate: Digest present  -> a challenge; load & retry
+            #     (an unauthenticated request always gets one, so this also
+            #      recovers an aged-out nonce)
+            #   * no challenge + <ResponseStatus>   -> stale/invalid nonce; drop
+            #     it and retry unauthenticated to get a fresh challenge
+            #   * no challenge + <userCheck>/lock   -> credentials really rejected
             attempts = 0
-            while resp.status == 401 and attempts < 4:
+            while resp.status == 401 and attempts < 3:
                 attempts += 1
                 body = await resp.text()
-                self._raise_if_locked(body)
                 challenge = resp.headers.get("WWW-Authenticate", "")
                 resp.release()
+                self._raise_if_locked(body)
                 if "Digest" in challenge:
                     async with self._auth_lock:
-                        self._digest.load_challenge(challenge)
+                        if self._digest_epoch == epoch:
+                            self._digest.load_challenge(challenge)
+                            self._digest_epoch += 1
                 elif "<userCheck" in body:
                     raise HikvisionAuthError("credentials rejected by terminal")
                 else:
-                    # stale/invalid nonce — forget it; next _send re-handshakes
-                    async with self._auth_lock:
-                        self._digest.nonce = ""
-                resp = await _send()
+                    await self._async_refresh_challenge(stale_epoch=epoch)
+                resp, epoch = await _send()
             if resp.status == 401:
                 raise HikvisionConnectionError(
                     f"{method} {endpoint}: Digest handshake did not settle"
@@ -212,9 +220,38 @@ class HikvisionISAPIClient:
             raise HikvisionProtocolError(f"HTTP {resp.status} on {endpoint}: {text[:200]}")
         return resp
 
+    async def _async_refresh_challenge(self, *, stale_epoch: int) -> None:
+        """Obtain a fresh Digest challenge via one unauthenticated request.
+
+        Serialized on ``_auth_lock``: if another coroutine already refreshed
+        (epoch moved past ``stale_epoch``) this returns immediately.
+        """
+        async with self._auth_lock:
+            if self._digest_epoch != stale_epoch and self._digest.nonce:
+                return
+            to = aiohttp.ClientTimeout(total=self._timeout)
+            async with self._session.get(
+                self._base + EP_DEVICE_INFO, timeout=to
+            ) as probe:
+                challenge = probe.headers.get("WWW-Authenticate", "")
+                if probe.status == 401 and "Digest" in challenge:
+                    self._digest.load_challenge(challenge)
+                    self._digest_epoch += 1
+                elif probe.status == 200:
+                    # no auth required at all (unlikely) — leave digest empty
+                    self._digest.nonce = ""
+                    self._digest_epoch += 1
+                else:
+                    body = await probe.text()
+                    self._raise_if_locked(body)
+                    raise HikvisionConnectionError(
+                        f"could not get Digest challenge: HTTP {probe.status}"
+                    )
+
     @staticmethod
     def _raise_if_locked(body: str) -> None:
-        if "lockStatus" in body and "lock" in body:
+        # careful: "<lockStatus>unlock</lockStatus>" also contains "lock"
+        if re.search(r"<lockStatus>\s*lock\s*</lockStatus>", body):
             m = re.search(r"<unlockTime>(\d+)</unlockTime>", body)
             raise HikvisionLockoutError(int(m.group(1)) if m else None)
 
@@ -411,21 +448,26 @@ class HikvisionISAPIClient:
         if not acknowledged:
             raise HikvisionProtocolError(f"door command not acknowledged: {body[:200]}")
 
-    async def _refresh_digest(self, endpoint: str = EP_DEVICE_INFO) -> None:
-        """Force a fresh Digest challenge (nonce may have aged out)."""
+    async def _stream_auth_header(self, endpoint: str, *, fresh: bool = False) -> str:
+        """A Digest Authorization header for a stream GET.
+
+        The terminal appears to bind (and then discard) the nonce to the
+        alertStream connection, so every (re)connect needs its own challenge.
+        """
+        if fresh or not self._digest.nonce:
+            async with self._auth_lock:
+                self._digest.nonce = ""
+            await self._async_refresh_challenge(stale_epoch=self._digest_epoch)
         async with self._auth_lock:
-            self._digest.nonce = ""
-        await self._get_text(endpoint)
+            return self._digest.header("GET", endpoint)
 
     async def async_probe_stream(self, endpoint: str) -> bool:
         """Confirm the alertStream endpoint answers 200 without holding it open."""
-        await self._refresh_digest()
         to = aiohttp.ClientTimeout(total=8, sock_connect=STREAM_CONNECT_TIMEOUT_S)
-        async with self._auth_lock:
-            headers = {"Authorization": self._digest.header("GET", endpoint)}
         try:
+            header = await self._stream_auth_header(endpoint, fresh=True)
             async with self._session.get(
-                self._base + endpoint, headers=headers, timeout=to
+                self._base + endpoint, headers={"Authorization": header}, timeout=to
             ) as resp:
                 if resp.status == 401:
                     self._raise_if_locked(await resp.text())
@@ -433,44 +475,52 @@ class HikvisionISAPIClient:
                 return resp.status == 200
         except TimeoutError:
             return True  # connected, just no data yet — the stream exists
-        except aiohttp.ClientError:
+        except (aiohttp.ClientError, HikvisionError):
             return False
 
     @asynccontextmanager
     async def async_stream(
         self, endpoint: str, idle_timeout: float
     ) -> AsyncIterator[aiohttp.ClientResponse]:
-        """Open a persistent alertStream GET (spec §9). Caller iterates the body.
-
-        Always starts from a fresh Digest challenge — a nonce cached from setup
-        will have expired by the time the listener reconnects hours later.
-        """
+        """Open a persistent alertStream GET (spec §9). Caller iterates the body."""
         to = aiohttp.ClientTimeout(
             total=None, sock_connect=STREAM_CONNECT_TIMEOUT_S, sock_read=idle_timeout
         )
 
-        async def _open() -> aiohttp.ClientResponse:
-            async with self._auth_lock:
-                headers = {"Authorization": self._digest.header("GET", endpoint)}
+        async def _open(fresh: bool = False) -> aiohttp.ClientResponse:
+            header = await self._stream_auth_header(endpoint, fresh=fresh)
             return await self._session.get(
-                self._base + endpoint, headers=headers, timeout=to
+                self._base + endpoint, headers={"Authorization": header}, timeout=to
             )
 
         try:
-            await self._refresh_digest()  # self-heals the Digest via _request
-            resp = await _open()
+            resp = await _open(fresh=True)
             if resp.status == 401:
                 body = await resp.text()
-                self._raise_if_locked(body)
+                challenge = resp.headers.get("WWW-Authenticate", "")
                 resp.release()
-                await self._refresh_digest()
+                self._raise_if_locked(body)
+                if "Digest" in challenge:
+                    async with self._auth_lock:
+                        self._digest.load_challenge(challenge)
+                        self._digest_epoch += 1
+                elif "<userCheck" in body:
+                    raise HikvisionAuthError("stream credentials rejected")
+                else:
+                    await self._async_refresh_challenge(stale_epoch=self._digest_epoch)
+                resp = await _open()
+            # The terminal returns 404 on alertStream while a just-closed
+            # connection's slot is still being torn down — wait it out once.
+            if resp.status == 404:
+                resp.release()
+                await asyncio.sleep(2)
                 resp = await _open()
         except aiohttp.ClientError as err:
             raise HikvisionConnectionError(str(err)) from err
         try:
             if resp.status == 401:
                 self._raise_if_locked(await resp.text())
-                raise HikvisionConnectionError("stream Digest re-challenge failed")
+                raise HikvisionConnectionError("stream Digest handshake did not settle")
             if resp.status != 200:
                 text = await resp.text()
                 raise HikvisionProtocolError(f"stream HTTP {resp.status}: {text[:120]}")
