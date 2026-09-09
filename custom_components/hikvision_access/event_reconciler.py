@@ -30,6 +30,7 @@ _SERIAL_OVERLAP = 5          # re-fetch the last few serials each run
 _MAX_PAGES_PER_RUN = 40      # ~1200 events/run; more runs catch up gently
 _PAGE_PAUSE_S = 0.5          # breathe between pages so we don't flood the terminal
 _FIRST_RUN_LOOKBACK_DAYS = 7
+_MISSING_URL_LOOKBACK_DAYS = 2   # how far back to chase photos the stream missed
 
 
 class EventReconciler:
@@ -92,6 +93,20 @@ class EventReconciler:
             begin_serial = max(1, max_serial - _SERIAL_OVERLAP + 1)
 
         now = dt_util.now().replace(microsecond=0)
+
+        # A face access seen live has no pictureURL (the alertStream never
+        # carries one). The fixed overlap above is quickly outrun by the door
+        # relay/contact serials a single access emits, so also walk back to the
+        # oldest recent decision that still lacks a photo.
+        since_iso = (now - timedelta(days=_MISSING_URL_LOOKBACK_DAYS)).isoformat()
+        missing_from = await self._store.async_oldest_missing_url_serial(
+            self._device_id, since_iso
+        )
+        if missing_from is not None:
+            begin_serial = (
+                missing_from if begin_serial is None else min(begin_serial, missing_from)
+            )
+
         start_iso = (now - timedelta(days=_FIRST_RUN_LOOKBACK_DAYS)).isoformat()
         end_iso = (now + timedelta(minutes=1)).isoformat()
 

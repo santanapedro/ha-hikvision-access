@@ -376,6 +376,28 @@ class EventStore:
 
         return await self._run(_q)
 
+    async def async_oldest_missing_url_serial(
+        self, device_id: str, since_iso: str
+    ) -> int | None:
+        """Lowest serialNo of a recent access decision that still has no
+        ``pictureURL``. The realtime path (alertStream) delivers face events
+        first without a photo; the reconciler must walk back far enough to
+        re-fetch them from ``AcsEvent`` (which does carry the URL)."""
+
+        def _q() -> int | None:
+            assert self._conn
+            row = self._conn.execute(
+                "SELECT MIN(CAST(serial_number AS INTEGER)) AS m FROM events "
+                "WHERE device_id=? AND serial_number IS NOT NULL "
+                "AND event_picture_url IS NULL "
+                "AND access_result IN ('granted','denied') "
+                "AND timestamp >= ?",
+                (device_id, since_iso),
+            ).fetchone()
+            return int(row["m"]) if row and row["m"] is not None else None
+
+        return await self._run(_q)
+
     async def async_events_missing_pictures(
         self, device_id: str, limit: int = 20
     ) -> list[dict[str, Any]]:

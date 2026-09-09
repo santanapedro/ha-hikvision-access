@@ -35,6 +35,37 @@ async def test_max_serial_tracks_highest(store):
     assert await store.async_max_serial("d1") == 42
 
 
+async def test_oldest_missing_url_serial(store):
+    now = datetime.now(UTC)
+    since = (now - timedelta(days=2)).isoformat()
+    # a live face access with no photo yet (serial 200) + its door cycle
+    await store.async_insert_event(
+        _event("d1:200", "200", now - timedelta(hours=1), person_id="7",
+               access_result="granted", minor_event_type="75")
+    )
+    await store.async_insert_event(
+        _event("d1:203", "203", now - timedelta(minutes=30), person_id="8",
+               access_result="granted", minor_event_type="75")
+    )
+    # door events must be ignored even though they also lack a URL
+    await store.async_insert_event(
+        _event("d1:204", "204", now, access_result="unknown", minor_event_type="21")
+    )
+    # an old decision (outside the lookback window) must be ignored
+    await store.async_insert_event(
+        _event("d1:50", "50", now - timedelta(days=5), person_id="1",
+               access_result="granted", minor_event_type="75")
+    )
+    assert await store.async_oldest_missing_url_serial("d1", since) == 200
+
+    # once the URL lands, that serial drops out of the set
+    await store.async_update_event_fields("d1:200", event_picture_url="http://x/a.jpg")
+    assert await store.async_oldest_missing_url_serial("d1", since) == 203
+
+    await store.async_update_event_fields("d1:203", event_picture_url="http://x/b.jpg")
+    assert await store.async_oldest_missing_url_serial("d1", since) is None
+
+
 async def test_access_only_excludes_door_events(store):
     base = datetime(2026, 9, 1, tzinfo=UTC)
     # a granted face access + its door cycle (no person, unknown result)
