@@ -340,6 +340,21 @@ class EventStore:
 
         return await self._run(_q)
 
+    async def async_picture_stats(self, device_id: str) -> dict[str, int]:
+        def _q() -> dict[str, int]:
+            assert self._conn
+            row = self._conn.execute(
+                "SELECT COUNT(*) AS total, "
+                "SUM(access_result IN ('granted','denied')) AS decisions, "
+                "SUM(event_picture_url IS NOT NULL) AS with_url, "
+                "SUM(event_picture_path IS NOT NULL) AS with_file "
+                "FROM events WHERE device_id=?",
+                (device_id,),
+            ).fetchone()
+            return {k: int(row[k] or 0) for k in row.keys()}
+
+        return await self._run(_q)
+
     async def async_events_missing_pictures(
         self, device_id: str, limit: int = 20
     ) -> list[dict[str, Any]]:
