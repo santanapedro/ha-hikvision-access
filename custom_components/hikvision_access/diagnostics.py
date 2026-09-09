@@ -43,4 +43,19 @@ async def async_get_config_entry_diagnostics(
             "status": rt.call.data if rt.call else None,
         },
         "listener": rt.gateway.health_snapshot(),
+        "pictures": {
+            "missing": len(
+                await rt.store.async_events_missing_pictures(rt.info.serial_number, 500)
+            ),
+            "lock_remaining_s": rt.client.lock_remaining,
+        },
+        "last_access": (
+            {
+                "person": rt.gateway.last_access_event.person_name,
+                "result": rt.gateway.last_access_event.access_result,
+                "picture_path": rt.gateway.last_access_event.event_picture_path,
+            }
+            if rt.gateway.last_access_event
+            else None
+        ),
     }

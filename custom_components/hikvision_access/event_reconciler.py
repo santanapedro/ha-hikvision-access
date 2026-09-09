@@ -155,15 +155,25 @@ class EventReconciler:
         if images is None:
             return
         rows = await self._store.async_events_missing_pictures(self._device_id, batch)
+        if not rows:
+            return
+        done = 0
         for row in rows:
             await asyncio.sleep(_PAGE_PAUSE_S)
             try:
                 path = await images.async_fetch_event_image_url(
                     row["event_uid"], row["event_picture_url"], row["timestamp"]
                 )
-            except HikvisionError:
+            except HikvisionError as err:
+                _LOGGER.debug("picture backfill paused: %s", err)
                 break  # locked / rate-limited — try again next run
             if path:
                 await self._store.async_update_event_fields(
                     row["event_uid"], event_picture_path=path
                 )
+                done += 1
+        _LOGGER.info(
+            "picture backfill for %s: %d/%d done (%d still pending)",
+            self._device_id, done, len(rows),
+            len(rows) - done if done < len(rows) else 0,
+        )

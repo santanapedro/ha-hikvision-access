@@ -13,7 +13,7 @@
  *   compact:  boolean   (smaller rows)
  */
 
-const VERSION = "0.2.1";
+const VERSION = "0.2.3";
 
 const METHOD_ICON = {
   face: "mdi:face-recognition",
