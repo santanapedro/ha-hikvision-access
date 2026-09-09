@@ -250,10 +250,27 @@ class HikvisionISAPIClient:
 
     @staticmethod
     def _raise_if_locked(body: str) -> None:
-        # careful: "<lockStatus>unlock</lockStatus>" also contains "lock"
+        """Raise if the 401 body signals the terminal's brute-force lock.
+
+        Covers: an explicit ``<lockStatus>lock</lockStatus>`` (careful — the
+        string ``unlock`` also contains ``lock``), an ``<unlockTime>``, or a
+        ``<userCheck>`` reporting the failed-login counter (``retryLoginTime``).
+        A wrong password is not distinguishable here from a lock, and the
+        credentials were already validated by the config flow, so any
+        ``<userCheck>`` rejection is treated as a lock and retried later.
+        """
         if re.search(r"<lockStatus>\s*lock\s*</lockStatus>", body):
             m = re.search(r"<unlockTime>(\d+)</unlockTime>", body)
-            raise HikvisionLockoutError(int(m.group(1)) if m else None)
+            raise HikvisionLockoutError(int(m.group(1)) if m else 300)
+        m = re.search(r"<unlockTime>(\d+)</unlockTime>", body)
+        if m and int(m.group(1)) > 0:
+            raise HikvisionLockoutError(int(m.group(1)))
+        # A <userCheck> that reports the failed-login counter means the terminal
+        # is tracking us toward a lock. The plain "not authenticated yet"
+        # challenge body never carries <retryLoginTime>. Back off rather than
+        # burning another attempt (which is what triggers the actual lock).
+        if "<retryLoginTime>" in body:
+            raise HikvisionLockoutError(180)
 
     async def _get_text(self, endpoint: str, **kw: Any) -> str:
         resp = await self._request("GET", endpoint, **kw)

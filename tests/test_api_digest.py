@@ -75,11 +75,29 @@ def test_no_lockout_on_normal_body():
     HikvisionISAPIClient._raise_if_locked("<DeviceInfo><model>X</model></DeviceInfo>")
 
 
-def test_unlock_status_is_not_a_lockout():
+def test_unlock_status_alone_is_not_a_lockout():
     # "<lockStatus>unlock</lockStatus>" contains the substring "lock"
     HikvisionISAPIClient._raise_if_locked(
-        "<userCheck><lockStatus>unlock</lockStatus>"
-        "<retryLoginTime>4</retryLoginTime></userCheck>"
+        "<userCheck><lockStatus>unlock</lockStatus><unlockTime>0</unlockTime></userCheck>"
+    )
+
+
+def test_retry_login_counter_is_treated_as_lockout():
+    # the terminal reporting a failed-login counter -> back off, don't burn
+    # another attempt (that is what trips the real lock)
+    with pytest.raises(HikvisionLockoutError):
+        HikvisionISAPIClient._raise_if_locked(
+            "<userCheck><isActivated>true</isActivated>"
+            "<lockStatus>unlock</lockStatus><unlockTime>0</unlockTime>"
+            "<retryLoginTime>4</retryLoginTime></userCheck>"
+        )
+
+
+def test_plain_challenge_body_is_not_a_lockout():
+    HikvisionISAPIClient._raise_if_locked(
+        "<userCheck><statusValue>401</statusValue>"
+        "<statusString>Unauthorized</statusString>"
+        "<isActivated>false</isActivated></userCheck>"
     )
 
 

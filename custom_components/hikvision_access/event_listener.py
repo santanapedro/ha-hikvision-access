@@ -75,12 +75,14 @@ class EventListener:
                 await self._connect_and_read()
                 attempt = 0
             except HikvisionLockoutError as err:
+                # never hammer a terminal that is counting failed logins
                 self._fail(err, level=logging.WARNING)
-                await self._sleep(min(err.unlock_seconds or 120, 300))
+                self._gateway.listener_state = "degraded"
+                await self._sleep(max(err.unlock_seconds or 180, 180))
             except HikvisionAuthError as err:
                 self._fail(err, level=logging.ERROR)
                 self._gateway.listener_state = "error"
-                await self._sleep(60)
+                await self._sleep(300)
             except (TimeoutError, HikvisionError, OSError) as err:
                 self._fail(err)
                 delay = RECONNECT_BACKOFF_S[min(attempt, len(RECONNECT_BACKOFF_S) - 1)]

@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import HikvisionISAPIClient
 from .const import DOMAIN, EP_ACS_WORK_STATUS, HEALTH_POLL_INTERVAL_S
-from .exceptions import HikvisionAuthError, HikvisionError
+from .exceptions import HikvisionAuthError, HikvisionError, HikvisionLockoutError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,9 @@ class HikvisionHealthCoordinator(DataUpdateCoordinator[HealthData]):
     async def _async_update_data(self) -> HealthData:
         try:
             raw = await self.client.async_get_caps(EP_ACS_WORK_STATUS)
+        except HikvisionLockoutError as err:
+            # transient — the terminal's brute-force lock; keep retrying
+            raise UpdateFailed(str(err)) from err
         except HikvisionAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except HikvisionError as err:
