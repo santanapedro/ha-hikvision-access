@@ -20,8 +20,10 @@ from .const import (
     EP_ALERT_STREAM,
     EP_HTTP_HOSTS,
     EP_REMOTE_DOOR_CAPS,
+    EP_STREAMING_CHANNELS,
     EP_USER_CAPS,
     EP_USER_COUNT,
+    EP_VIDEO_INTERCOM_CAPS,
 )
 from .exceptions import (
     HikvisionAuthError,
@@ -94,6 +96,17 @@ async def async_discover(client: HikvisionISAPIClient) -> DeviceCapabilities:
 
     caps.door_status = acs_ok  # AcsWorkStatus lives alongside; assume with ACS caps
     caps.door_count = 1
+
+    # video (RTSP/snapshot) + video-intercom (call button)
+    vid_ok, _ = await _ok(client, EP_STREAMING_CHANNELS)
+    caps.video = vid_ok
+    ic_ok, ic = await _ok(client, EP_VIDEO_INTERCOM_CAPS)
+    if ic_ok:
+        node = ic.get("VideoIntercomCap", ic)
+        caps.intercom = _flag(node, "isSupportCallStatus") or _flag(
+            node, "isSupportCallSignal"
+        )
+
     return caps
 
 

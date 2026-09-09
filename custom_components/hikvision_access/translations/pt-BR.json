@@ -35,6 +35,8 @@
           "event_route": "Rota de eventos (push recomendado)",
           "register_push_on_device": "Registrar push no terminal (grava um slot httpHosts)",
           "also_run_stream": "Manter também o alertStream ativo",
+          "enable_camera": "Criar câmera de visualização ao vivo (RTSP)",
+          "rtsp_port": "Porta RTSP",
           "reconcile_interval_s": "Intervalo de reconciliação (s)",
           "image_retention_days": "Retenção de imagens (dias, 0 = ilimitado)",
           "store_granted_images": "Salvar fotos de acessos permitidos",
@@ -50,7 +52,11 @@
     "binary_sensor": {
       "online": { "name": "Online" },
       "door": { "name": "Porta" },
-      "tamper": { "name": "Violação" }
+      "tamper": { "name": "Violação" },
+      "doorbell": { "name": "Campainha" }
+    },
+    "camera": {
+      "live": { "name": "Ao vivo" }
     },
     "sensor": {
       "connection_status": {
@@ -96,6 +102,14 @@
               "tamper": "Violação",
               "device_alarm": "Alarme do dispositivo"
             }
+          }
+        }
+      },
+      "call": {
+        "name": "Campainha",
+        "state_attributes": {
+          "event_type": {
+            "state": { "ring": "Tocando", "answered": "Atendida", "ended": "Encerrada" }
           }
         }
       }

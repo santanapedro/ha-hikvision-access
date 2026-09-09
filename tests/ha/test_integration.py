@@ -52,6 +52,8 @@ def _bypass_probe():
         door_status=True,
         user_search=True,
         face=True,
+        video=True,
+        intercom=True,
     )
     work_status = {"AcsWorkStatus": {"doorLockStatus": [0], "doorStatus": [4],
                                      "magneticStatus": [0], "netStatus": "connect"}}
@@ -71,6 +73,10 @@ def _bypass_probe():
         patch(
             "custom_components.hikvision_access.coordinator.HikvisionISAPIClient.async_get_caps",
             AsyncMock(return_value=work_status),
+        ),
+        patch(
+            "custom_components.hikvision_access.coordinator.HikvisionISAPIClient.async_get_call_status",
+            AsyncMock(return_value="idle"),
         ),
         patch(
             "custom_components.hikvision_access.event_reconciler.EventReconciler.async_start",
@@ -115,8 +121,14 @@ async def test_setup_and_unload(hass: HomeAssistant, _bypass_probe) -> None:
         entry.entry_id
     )
     domains = {e.domain for e in entities}
-    assert {"event", "image", "binary_sensor", "button", "sensor"} <= domains
-    assert len(entities) >= 10
+    assert {
+        "event", "image", "binary_sensor", "button", "sensor", "camera"
+    } <= domains
+    assert len(entities) >= 12
+    uids = {e.unique_id for e in entities}
+    assert any(u.endswith("_camera") for u in uids)
+    assert any(u.endswith("_doorbell") for u in uids)
+    assert any(u.endswith("_call") for u in uids)
 
     # services registered
     for svc in ("open_door", "reconcile_now", "sync_persons", "setup_push", "remove_push"):

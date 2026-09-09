@@ -41,16 +41,27 @@
           "store_denied_images": "Store images of denied access",
           "store_raw_payload": "Store raw event payload",
           "create_open_door_button": "Create open-door button",
-          "mask_card_number": "Mask card number"
+          "mask_card_number": "Mask card number",
+          "enable_camera": "Create a live-view camera (RTSP)",
+          "rtsp_port": "RTSP port"
         }
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "online": { "name": "Online" },
-      "door": { "name": "Door" },
-      "tamper": { "name": "Tamper" }
+      "online": {
+        "name": "Online"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "doorbell": {
+        "name": "Doorbell"
+      }
     },
     "sensor": {
       "connection_status": {
@@ -62,26 +73,48 @@
           "authentication_error": "Authentication error"
         }
       },
-      "firmware": { "name": "Firmware" },
-      "events_today": { "name": "Accesses today" },
-      "last_access_user": { "name": "Last access — person" },
-      "last_access_time": { "name": "Last access — time" },
+      "firmware": {
+        "name": "Firmware"
+      },
+      "events_today": {
+        "name": "Accesses today"
+      },
+      "last_access_user": {
+        "name": "Last access — person"
+      },
+      "last_access_time": {
+        "name": "Last access — time"
+      },
       "last_access_result": {
         "name": "Last access — result",
-        "state": { "granted": "Granted", "denied": "Denied", "unknown": "Unknown" }
+        "state": {
+          "granted": "Granted",
+          "denied": "Denied",
+          "unknown": "Unknown"
+        }
       },
       "last_auth_method": {
         "name": "Last access — method",
         "state": {
-          "face": "Face", "card": "Card", "fingerprint": "Fingerprint", "qr": "QR code",
-          "password": "Password", "remote": "Remote", "button": "Button",
-          "other": "Other", "unknown": "Unknown"
+          "face": "Face",
+          "card": "Card",
+          "fingerprint": "Fingerprint",
+          "qr": "QR code",
+          "password": "Password",
+          "remote": "Remote",
+          "button": "Button",
+          "other": "Other",
+          "unknown": "Unknown"
         }
       },
-      "last_door": { "name": "Last access — door" }
+      "last_door": {
+        "name": "Last access — door"
+      }
     },
     "button": {
-      "open_door": { "name": "Open door" }
+      "open_door": {
+        "name": "Open door"
+      }
     },
     "event": {
       "access": {
@@ -98,10 +131,29 @@
             }
           }
         }
+      },
+      "call": {
+        "name": "Doorbell",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ringing",
+              "answered": "Answered",
+              "ended": "Ended"
+            }
+          }
+        }
       }
     },
     "image": {
-      "last_access": { "name": "Last access photo" }
+      "last_access": {
+        "name": "Last access photo"
+      }
+    },
+    "camera": {
+      "live": {
+        "name": "Live"
+      }
     }
   },
   "services": {
@@ -109,41 +161,74 @@
       "name": "Open door",
       "description": "Momentarily releases the terminal's door.",
       "fields": {
-        "device_id": { "name": "Device", "description": "Target terminal." },
-        "entry_id": { "name": "Integration id", "description": "Alternative to the device." },
-        "door": { "name": "Door", "description": "Door number (usually 1)." }
+        "device_id": {
+          "name": "Device",
+          "description": "Target terminal."
+        },
+        "entry_id": {
+          "name": "Integration id",
+          "description": "Alternative to the device."
+        },
+        "door": {
+          "name": "Door",
+          "description": "Door number (usually 1)."
+        }
       }
     },
     "reconcile_now": {
       "name": "Reconcile now",
       "description": "Forces a sweep of the terminal's event log.",
       "fields": {
-        "device_id": { "name": "Device", "description": "Target terminal." },
-        "entry_id": { "name": "Integration id", "description": "Alternative to the device." }
+        "device_id": {
+          "name": "Device",
+          "description": "Target terminal."
+        },
+        "entry_id": {
+          "name": "Integration id",
+          "description": "Alternative to the device."
+        }
       }
     },
     "sync_persons": {
       "name": "Sync persons",
       "description": "Loads every enrolled user from the terminal into the local cache.",
       "fields": {
-        "device_id": { "name": "Device", "description": "Target terminal." },
-        "entry_id": { "name": "Integration id", "description": "Alternative to the device." }
+        "device_id": {
+          "name": "Device",
+          "description": "Target terminal."
+        },
+        "entry_id": {
+          "name": "Integration id",
+          "description": "Alternative to the device."
+        }
       }
     },
     "setup_push": {
       "name": "Set up push on the terminal",
       "description": "Writes a free httpHosts slot on the terminal pointing at Home Assistant.",
       "fields": {
-        "device_id": { "name": "Device", "description": "Target terminal." },
-        "entry_id": { "name": "Integration id", "description": "Alternative to the device." }
+        "device_id": {
+          "name": "Device",
+          "description": "Target terminal."
+        },
+        "entry_id": {
+          "name": "Integration id",
+          "description": "Alternative to the device."
+        }
       }
     },
     "remove_push": {
       "name": "Remove push from the terminal",
       "description": "Releases the httpHosts slot Home Assistant had registered.",
       "fields": {
-        "device_id": { "name": "Device", "description": "Target terminal." },
-        "entry_id": { "name": "Integration id", "description": "Alternative to the device." }
+        "device_id": {
+          "name": "Device",
+          "description": "Target terminal."
+        },
+        "entry_id": {
+          "name": "Integration id",
+          "description": "Alternative to the device."
+        }
       }
     }
   }

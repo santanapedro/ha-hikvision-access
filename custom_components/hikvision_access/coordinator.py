@@ -18,7 +18,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import HikvisionISAPIClient
-from .const import DOMAIN, EP_ACS_WORK_STATUS, HEALTH_POLL_INTERVAL_S
+from .const import (
+    CALL_POLL_INTERVAL_S,
+    DOMAIN,
+    EP_ACS_WORK_STATUS,
+    HEALTH_POLL_INTERVAL_S,
+)
 from .exceptions import HikvisionAuthError, HikvisionError, HikvisionLockoutError
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +77,48 @@ class HikvisionHealthCoordinator(DataUpdateCoordinator[HealthData]):
             net_status=status.get("netStatus"),
             raw=status,
         )
+
+
+_RINGING = {"ring", "ringing", "calling", "bell"}
+_ON_CALL = {"oncall", "incall", "talking", "answered"}
+
+
+class HikvisionCallCoordinator(DataUpdateCoordinator[str]):
+    """Fast poll of the video-intercom call status (doorbell button).
+
+    Fallback for terminals whose call event does not arrive on the alertStream;
+    the poll is cheap (one small GET). State is the raw status string, lowercased
+    ('idle', 'ring', 'oncall', ...).
+    """
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: HikvisionISAPIClient
+    ) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_call",
+            update_interval=timedelta(seconds=CALL_POLL_INTERVAL_S),
+        )
+        self.entry = entry
+        self.client = client
+
+    async def _async_update_data(self) -> str:
+        try:
+            status = await self.client.async_get_call_status()
+        except HikvisionLockoutError as err:
+            raise UpdateFailed(str(err)) from err
+        except HikvisionError as err:
+            raise UpdateFailed(str(err)) from err
+        return (status or "idle").strip().lower()
+
+    @property
+    def is_ringing(self) -> bool:
+        return (self.data or "") in _RINGING
+
+    @property
+    def in_call(self) -> bool:
+        return (self.data or "") in _ON_CALL
 
 
 def _first(value: Any) -> int | None:

@@ -15,7 +15,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HikvisionAccessEntry
-from .coordinator import HealthData, HikvisionHealthCoordinator
+from .coordinator import (
+    HealthData,
+    HikvisionCallCoordinator,
+    HikvisionHealthCoordinator,
+)
 from .entity import HikvisionAccessEntity
 
 
@@ -52,10 +56,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     rt = entry.runtime_data
-    async_add_entities(
+    entities: list = [
         HikvisionBinarySensor(entry.entry_id, rt.info, rt.health, desc)
         for desc in DESCRIPTIONS
-    )
+    ]
+    if rt.call is not None:
+        entities.append(
+            HikvisionDoorbellSensor(entry.entry_id, rt.info, rt.call)
+        )
+    async_add_entities(entities)
 
 
 class HikvisionBinarySensor(
@@ -78,3 +87,27 @@ class HikvisionBinarySensor(
         if self.entity_description.key == "online":
             return True
         return super().available and self.coordinator.data.reachable
+
+
+class HikvisionDoorbellSensor(
+    HikvisionAccessEntity,
+    CoordinatorEntity[HikvisionCallCoordinator],
+    BinarySensorEntity,
+):
+    """On while the call (doorbell) button is ringing or on an active call."""
+
+    _attr_translation_key = "doorbell"
+    _attr_device_class = BinarySensorDeviceClass.SOUND
+
+    def __init__(self, entry_id, info, coordinator: HikvisionCallCoordinator) -> None:
+        HikvisionAccessEntity.__init__(self, entry_id, info)
+        CoordinatorEntity.__init__(self, coordinator)
+        self._attr_unique_id = f"{self._base_unique_id}_doorbell"
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.is_ringing or self.coordinator.in_call
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"call_status": self.coordinator.data}

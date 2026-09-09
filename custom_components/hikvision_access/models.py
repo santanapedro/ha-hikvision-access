@@ -37,6 +37,8 @@ class DeviceCapabilities:
     card: bool = False
     fingerprint: bool = False
     qr: bool = False
+    video: bool = False          # RTSP / snapshot channel available
+    intercom: bool = False       # video-intercom call button / call status
     door_count: int = 1
     raw: dict[str, Any] = field(default_factory=dict)
 

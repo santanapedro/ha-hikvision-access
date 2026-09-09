@@ -27,6 +27,8 @@ OPT_REQUEST_TIMEOUT: Final = "request_timeout_s"
 OPT_MASK_CARD_NUMBER: Final = "mask_card_number"
 OPT_REGISTER_PUSH_ON_DEVICE: Final = "register_push_on_device"
 OPT_ALSO_RUN_STREAM: Final = "also_run_stream"
+OPT_ENABLE_CAMERA: Final = "enable_camera"
+OPT_RTSP_PORT: Final = "rtsp_port"
 
 # stored in the config entry after we successfully claim a push slot
 DATA_PUSH_TOKEN: Final = "push_token"
@@ -52,6 +54,11 @@ EVENT_IDLE_TIMEOUT_S: Final = 90
 
 # health coordinator polling (door status / firmware / connectivity)
 HEALTH_POLL_INTERVAL_S: Final = 30
+
+# doorbell / call-status polling (fallback for terminals where the call event
+# does not arrive on the alertStream)
+CALL_POLL_INTERVAL_S: Final = 3
+DEFAULT_RTSP_PORT: Final = 554
 
 # --- reconnect backoff for the alertStream listener (spec §9.2) ---
 RECONNECT_BACKOFF_S: Final = (1, 2, 5, 10, 30, 60)
@@ -94,6 +101,13 @@ EP_ACS_EVENT: Final = "/ISAPI/AccessControl/AcsEvent?format=json"
 EP_ACS_EVENT_CAPS: Final = "/ISAPI/AccessControl/AcsEvent/capabilities?format=json"
 EP_ACS_CAPS: Final = "/ISAPI/AccessControl/capabilities?format=json"
 EP_ACS_WORK_STATUS: Final = "/ISAPI/AccessControl/AcsWorkStatus?format=json"
+EP_STREAMING_CHANNELS: Final = "/ISAPI/Streaming/channels"
+EP_SNAPSHOT: Final = "/ISAPI/Streaming/channels/{channel}/picture"
+EP_VIDEO_INTERCOM_CAPS: Final = "/ISAPI/VideoIntercom/capabilities?format=json"
+EP_CALL_STATUS: Final = "/ISAPI/VideoIntercom/callStatus?format=json"
+RTSP_PATH: Final = "/Streaming/Channels/{channel}"
+CALL_CHANNEL_MAIN: Final = 101
+CALL_CHANNEL_SUB: Final = 102
 EP_DOOR_PARAM: Final = "/ISAPI/AccessControl/Door/param/{door}?format=json"
 EP_REMOTE_DOOR: Final = "/ISAPI/AccessControl/RemoteControl/door/{door}"
 EP_REMOTE_DOOR_CAPS: Final = "/ISAPI/AccessControl/RemoteControl/door/capabilities?format=json"

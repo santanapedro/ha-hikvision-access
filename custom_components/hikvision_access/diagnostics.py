@@ -38,4 +38,9 @@ async def async_get_config_entry_diagnostics(
             "last_update_success": rt.health.last_update_success,
             "data": vars(rt.health.data) if rt.health.data else None,
         },
+        "call": {
+            "enabled": rt.call is not None,
+            "status": rt.call.data if rt.call else None,
+        },
+        "listener": rt.gateway.health_snapshot(),
     }

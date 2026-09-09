@@ -43,7 +43,7 @@ from .const import (
     OPT_RECONCILE_INTERVAL,
     OPT_REGISTER_PUSH_ON_DEVICE,
 )
-from .coordinator import HikvisionHealthCoordinator
+from .coordinator import HikvisionCallCoordinator, HikvisionHealthCoordinator
 from .event_listener import EventListener
 from .event_reconciler import EventReconciler
 from .exceptions import (
@@ -66,6 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.EVENT,
     Platform.IMAGE,
     Platform.SENSOR,
@@ -87,6 +88,7 @@ class HikvisionAccessRuntime:
     listener: EventListener | None
     reconciler: EventReconciler
     door_name: str | None
+    call: HikvisionCallCoordinator | None = None
     unsubs: list = field(default_factory=list)
 
 
@@ -165,6 +167,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
     health = HikvisionHealthCoordinator(hass, entry, client)
     await health.async_config_entry_first_refresh()
 
+    call: HikvisionCallCoordinator | None = None
+    if capabilities.intercom:
+        call = HikvisionCallCoordinator(hass, entry, client)
+        try:
+            await call.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            call = None  # keep the rest of the integration working
+
     reconciler = EventReconciler(
         hass,
         client,
@@ -211,6 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
         listener=listener,
         reconciler=reconciler,
         door_name=door_name,
+        call=call,
         unsubs=unsubs,
     )
     entry.runtime_data = runtime

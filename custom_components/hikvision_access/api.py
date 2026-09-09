@@ -321,6 +321,40 @@ class HikvisionISAPIClient:
         except ValueError as err:
             raise HikvisionProtocolError(f"unparseable capabilities from {endpoint}") from err
 
+    async def async_get_snapshot(self, channel: int) -> bytes:
+        """JPEG snapshot from a streaming channel (101 = main, 102 = sub)."""
+        from .const import EP_SNAPSHOT
+
+        resp = await self._request("GET", EP_SNAPSHOT.format(channel=channel))
+        try:
+            blob = await resp.read()
+        finally:
+            resp.release()
+        if blob[:3] != b"\xff\xd8\xff":
+            raise HikvisionProtocolError("snapshot is not a JPEG")
+        return blob
+
+    async def async_get_call_status(self) -> str | None:
+        """Video-intercom call state: 'idle', 'ring', 'onCall', ... or None."""
+        from .const import EP_CALL_STATUS
+
+        try:
+            data = await self.async_get_caps(EP_CALL_STATUS)
+        except HikvisionUnsupportedError:
+            return None
+        node = data.get("CallStatus", data)
+        return node.get("status")
+
+    def rtsp_url(self, channel: int, port: int) -> str:
+        """RTSP URL for HA's stream component (credentials embedded)."""
+        from urllib.parse import quote
+
+        from .const import RTSP_PATH
+
+        user = quote(self._username, safe="")
+        pw = quote(self._password, safe="")
+        return f"rtsp://{user}:{pw}@{self._host}:{port}{RTSP_PATH.format(channel=channel)}"
+
     async def async_search_acs_events(
         self,
         search_id: str,

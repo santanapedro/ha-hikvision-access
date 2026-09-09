@@ -127,3 +127,16 @@ Mudanças de comportamento que quebraram o cliente e foram corrigidas no **v0.1.
 - 401 por nonce velho = `<ResponseStatus>` `invalidOperation`; 401 por senha errada /
   contador de tentativas = `<userCheck>` com `<retryLoginTime>N`; lock de fato =
   `<lockStatus>lock</lockStatus>` + `<unlockTime>`.
+
+## Vídeo + campainha (VideoIntercom) — confirmado no .118
+
+- **RTSP**: `rtsp://<user>:<pass>@<host>:554/Streaming/Channels/101` (principal, 1080p H.264)
+  ou `/102` (sub). Canais em `GET /ISAPI/Streaming/channels`.
+- **Snapshot**: `GET /ISAPI/Streaming/channels/101/picture` → `image/jpeg` (~69 KB). Digest normal.
+- **Campainha / botão de chamada**: `GET /ISAPI/VideoIntercom/capabilities?format=json` →
+  `isSupportCallStatus`, `isSupportCallSignal`, `isSupportCallerInfo`, `isSupportKeyCfg` = true.
+  `GET /ISAPI/VideoIntercom/callStatus?format=json` → `{"CallStatus":{"status":"idle"}}` —
+  vira `ring`/`onCall` quando o botão é apertado. A integração faz poll disso a cada 3s
+  (`HikvisionCallCoordinator`) → `binary_sensor.*_campainha` + `event.*_campainha`.
+- **A validar**: se o evento de chamada também chega pelo `alertStream` (seria push instantâneo
+  em vez de poll). Capturar apertando o botão com o listener conectado.

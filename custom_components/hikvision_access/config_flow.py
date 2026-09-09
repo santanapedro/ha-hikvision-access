@@ -36,6 +36,7 @@ from .const import (
     DEFAULT_IMAGE_RETENTION_DAYS,
     DEFAULT_RECONCILE_INTERVAL_S,
     DEFAULT_REQUEST_TIMEOUT_S,
+    DEFAULT_RTSP_PORT,
     DEFAULT_USE_HTTPS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -43,12 +44,14 @@ from .const import (
     MIN_RECONCILE_INTERVAL_S,
     OPT_ALSO_RUN_STREAM,
     OPT_CREATE_OPEN_DOOR_BUTTON,
+    OPT_ENABLE_CAMERA,
     OPT_EVENT_ROUTE,
     OPT_IMAGE_RETENTION_DAYS,
     OPT_MASK_CARD_NUMBER,
     OPT_RECONCILE_INTERVAL,
     OPT_REGISTER_PUSH_ON_DEVICE,
     OPT_REQUEST_TIMEOUT,
+    OPT_RTSP_PORT,
     OPT_STORE_DENIED_IMAGES,
     OPT_STORE_GRANTED_IMAGES,
     OPT_STORE_RAW_PAYLOAD,
@@ -168,6 +171,8 @@ def _default_options() -> dict[str, Any]:
         OPT_STORE_DENIED_IMAGES: True,
         OPT_STORE_RAW_PAYLOAD: False,
         OPT_CREATE_OPEN_DOOR_BUTTON: True,
+        OPT_ENABLE_CAMERA: True,
+        OPT_RTSP_PORT: DEFAULT_RTSP_PORT,
         OPT_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT_S,
         OPT_MASK_CARD_NUMBER: True,
     }
@@ -224,6 +229,12 @@ class HikvisionAccessOptionsFlow(OptionsFlow):
                         OPT_CREATE_OPEN_DOOR_BUTTON,
                         default=opts[OPT_CREATE_OPEN_DOOR_BUTTON],
                     ): bool,
+                    vol.Required(
+                        OPT_ENABLE_CAMERA, default=opts[OPT_ENABLE_CAMERA]
+                    ): bool,
+                    vol.Required(
+                        OPT_RTSP_PORT, default=opts[OPT_RTSP_PORT]
+                    ): vol.All(int, vol.Range(min=1, max=65535)),
                     vol.Required(
                         OPT_MASK_CARD_NUMBER, default=opts[OPT_MASK_CARD_NUMBER]
                     ): bool,
