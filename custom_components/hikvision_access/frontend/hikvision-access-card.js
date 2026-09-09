@@ -13,7 +13,12 @@
  *   compact:  boolean   (smaller rows)
  */
 
-const VERSION = "0.2.3";
+const VERSION = "0.2.7";
+
+// Event fields (person_name, door_name, device_name, event_uid) come from the
+// terminal and are rendered via innerHTML — always escape them.
+const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ESC[c]);
 
 const METHOD_ICON = {
   face: "mdi:face-recognition",
@@ -165,7 +170,7 @@ class HikvisionAccessCard extends HTMLElement {
     try {
       const signed = await this._hass.callWS({
         type: "auth/sign_path",
-        path: `/api/hikvision_access/events/${uid}/image`,
+        path: `/api/hikvision_access/events/${encodeURIComponent(uid)}/image`,
         expires: 3600,
       });
       const url = this._hass.hassUrl(signed.path);
@@ -186,7 +191,7 @@ class HikvisionAccessCard extends HTMLElement {
       <style>${STYLE}</style>
       <ha-card>
         <div class="head">
-          <div class="title">${c.title || "Acessos"}</div>
+          <div class="title">${esc(c.title || "Acessos")}</div>
           <div class="filters">
             ${this._segment("range", RANGES)}
             ${this._segment("result", { all: "Todos", granted: "✓", denied: "✕" })}
@@ -194,10 +199,10 @@ class HikvisionAccessCard extends HTMLElement {
         </div>
         <div class="person">
           <ha-icon icon="mdi:magnify"></ha-icon>
-          <input id="person" placeholder="Filtrar por ID de pessoa" value="${this._filters.person}">
+          <input id="person" placeholder="Filtrar por ID de pessoa" value="${esc(this._filters.person)}">
         </div>
         <div class="list ${compact}">
-          ${this._error ? `<div class="empty err">${this._error}</div>` : ""}
+          ${this._error ? `<div class="empty err">${esc(this._error)}</div>` : ""}
           ${!this._error && !this._events.length && !this._loading
             ? `<div class="empty">Nenhum acesso no período.</div>` : ""}
           ${this._events.map((e) => this._row(e)).join("")}
@@ -254,19 +259,19 @@ class HikvisionAccessCard extends HTMLElement {
     const when = new Date(e.timestamp);
     const time = when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const date = when.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-    const name = e.person_name || (e.person_id ? `#${e.person_id}` : "Desconhecido");
+    const name = esc(e.person_name || (e.person_id ? `#${e.person_id}` : "Desconhecido"));
     const method = METHOD_LABEL[e.method] || "—";
-    const dev = e.device_name ? ` · ${e.device_name}` : "";
+    const dev = e.device_name ? ` · ${esc(e.device_name)}` : "";
     return `
       <div class="row ${e._isNew ? "new" : ""}">
         <div class="thumb">
           ${e.has_event_picture
-            ? `<img data-uid="${e.event_uid}" alt="">`
+            ? `<img data-uid="${esc(e.event_uid)}" alt="">`
             : `<ha-icon icon="mdi:account"></ha-icon>`}
         </div>
         <div class="info">
           <div class="l1">${name}</div>
-          <div class="l2">${date} ${time}${dev}${e.door_name ? ` · ${e.door_name}` : ""}</div>
+          <div class="l2">${date} ${time}${dev}${e.door_name ? ` · ${esc(e.door_name)}` : ""}</div>
           <div class="l3">
             <ha-icon icon="${METHOD_ICON[e.method] || METHOD_ICON.unknown}"></ha-icon> ${method}
           </div>

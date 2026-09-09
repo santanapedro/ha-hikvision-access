@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PUSH_URL_FORMAT = "/api/hikvision_access/push/{token}"
 _TOTAL_SLOTS = 2
+_MAX_PUSH_BODY = 25 * 1024 * 1024  # a multipart event + a face JPEG is well under this
 
 
 def new_token() -> str:
@@ -78,7 +79,13 @@ class HikvisionPushView(HomeAssistantView):
         if target is None:
             return web.Response(status=404)
 
-        body = await request.read()
+        if (request.content_length or 0) > _MAX_PUSH_BODY:
+            _LOGGER.warning("rejecting oversized push body (%s bytes)", request.content_length)
+            return web.Response(status=413)
+        try:
+            body = await request.read()
+        except web.HTTPException:
+            return web.Response(status=400)
         try:
             event, jpeg = parse_push_body(
                 request.headers.get("Content-Type", ""),

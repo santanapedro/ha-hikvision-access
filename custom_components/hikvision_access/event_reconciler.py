@@ -31,6 +31,7 @@ _MAX_PAGES_PER_RUN = 40      # ~1200 events/run; more runs catch up gently
 _PAGE_PAUSE_S = 0.5          # breathe between pages so we don't flood the terminal
 _FIRST_RUN_LOOKBACK_DAYS = 7
 _MISSING_URL_LOOKBACK_DAYS = 2   # how far back to chase photos the stream missed
+_MAX_BACKFILL_SERIALS = 600     # ...but never re-page more than this per run
 
 
 class EventReconciler:
@@ -103,6 +104,10 @@ class EventReconciler:
             self._device_id, since_iso
         )
         if missing_from is not None:
+            if max_serial is not None:
+                # a decision that never gets a photo (e.g. purged on the
+                # terminal) must not anchor the sweep to a low serial forever
+                missing_from = max(missing_from, max_serial - _MAX_BACKFILL_SERIALS)
             begin_serial = (
                 missing_from if begin_serial is None else min(begin_serial, missing_from)
             )

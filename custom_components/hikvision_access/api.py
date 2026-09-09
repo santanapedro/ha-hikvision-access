@@ -50,6 +50,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _HIK_NS = re.compile(r"\{.*?\}")
 
+_MAX_PICTURE_BYTES = 8 * 1024 * 1024  # event/user JPEGs are tens of KB
+
 
 def _strip_ns(tag: str) -> str:
     return _HIK_NS.sub("", tag)
@@ -356,7 +358,7 @@ class HikvisionISAPIClient:
 
         resp = await self._request("GET", EP_SNAPSHOT.format(channel=channel))
         try:
-            blob = await resp.read()
+            blob = await self._read_capped(resp)
         finally:
             resp.release()
         if blob[:3] != b"\xff\xd8\xff":
@@ -459,9 +461,24 @@ class HikvisionISAPIClient:
             endpoint = url_or_path.split(self._host, 1)[-1]
         resp = await self._request("GET", endpoint)
         try:
-            return await resp.read()
+            return await self._read_capped(resp)
         finally:
             resp.release()
+
+    @staticmethod
+    async def _read_capped(resp: aiohttp.ClientResponse, cap: int = _MAX_PICTURE_BYTES) -> bytes:
+        """Read a response body but never more than ``cap`` (a face JPEG is ~40 KB;
+        this only guards against a terminal that answers with something huge)."""
+        if (resp.content_length or 0) > cap:
+            raise HikvisionProtocolError(f"response too large ({resp.content_length} bytes)")
+        chunks: list[bytes] = []
+        total = 0
+        async for chunk in resp.content.iter_chunked(65536):
+            total += len(chunk)
+            if total > cap:
+                raise HikvisionProtocolError("response exceeded size cap while reading")
+            chunks.append(chunk)
+        return b"".join(chunks)
 
     async def async_get_http_hosts(self) -> list[dict[str, Any]]:
         """Parse the httpHosts notification list (id + url + ip + port per slot)."""
