@@ -358,6 +358,24 @@ class EventStore:
 
         return await self._run(_q)
 
+    async def async_recent_decisions(
+        self, device_id: str, limit: int = 15
+    ) -> list[dict[str, Any]]:
+        def _q() -> list[dict[str, Any]]:
+            assert self._conn
+            rows = self._conn.execute(
+                "SELECT serial_number, timestamp, person_id, minor_event_type, "
+                "is_live, (event_picture_url IS NOT NULL) AS has_url, "
+                "(event_picture_path IS NOT NULL) AS has_file "
+                "FROM events WHERE device_id=? "
+                "AND access_result IN ('granted','denied') "
+                "ORDER BY timestamp DESC LIMIT ?",
+                (device_id, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+        return await self._run(_q)
+
     async def async_events_missing_pictures(
         self, device_id: str, limit: int = 20
     ) -> list[dict[str, Any]]:

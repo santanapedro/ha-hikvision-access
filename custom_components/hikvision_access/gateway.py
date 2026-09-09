@@ -123,6 +123,7 @@ class EventGateway:
 
         is_new = await self._store.async_insert_event(event)
         if not is_new:
+            await self._maybe_upgrade(event)
             return False
 
         _LOGGER.debug(
@@ -165,6 +166,46 @@ class EventGateway:
             },
         )
         return True
+
+    async def _maybe_upgrade(self, event: AccessEvent) -> None:
+        """A duplicate: the realtime path delivered this event first without a
+        photo (the alertStream carries no pictureURL). If the reconciler's copy
+        has one, fetch it and patch the stored row + refresh the entities."""
+        if not event.event_picture_url and not event.person_name:
+            return
+        stored = await self._store.async_get_event(event.event_uid)
+        if not stored:
+            return
+        fields: dict = {}
+        if event.event_picture_url and not stored.get("event_picture_url"):
+            fields["event_picture_url"] = event.event_picture_url
+        if event.person_name and not stored.get("person_name"):
+            fields["person_name"] = event.person_name
+        need_photo = (
+            event.event_picture_url
+            and not stored.get("event_picture_path")
+            and self._images is not None
+            and self._want_image(stored.get("access_result") or "unknown")
+        )
+        if need_photo:
+            path = await self._images.async_fetch_event_image(event)
+            if path:
+                fields["event_picture_path"] = path
+                event.event_picture_path = path
+        if not fields:
+            return
+        await self._store.async_update_event_fields(event.event_uid, **fields)
+
+        # refresh the "last access" surface if this is (still) the latest one
+        mapping = map_event(event.major_event_type, event.minor_event_type)
+        if mapping.is_access_decision and (
+            self.last_access_event is None
+            or self.last_access_event.event_uid == event.event_uid
+            or event.timestamp >= self.last_access_event.timestamp
+        ):
+            event.person_name = event.person_name or stored.get("person_name")
+            self.last_access_event = event
+            async_dispatcher_send(self.hass, signal_access(self.entry_id), event)
 
     async def _enrich(self, event: AccessEvent) -> None:
         if event.person_id and not event.person_name and self._persons is not None:

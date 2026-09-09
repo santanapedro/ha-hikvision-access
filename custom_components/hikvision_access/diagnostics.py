@@ -27,6 +27,7 @@ async def async_get_config_entry_diagnostics(
     last = rt.gateway.last_access_event
 
     stats = await rt.store.async_picture_stats(rt.info.serial_number)
+    recent = await rt.store.async_recent_decisions(rt.info.serial_number, 15)
 
     return {
         "entry": {
@@ -47,6 +48,18 @@ async def async_get_config_entry_diagnostics(
         "call": {"enabled": rt.call is not None, "status": rt.call.data if rt.call else None},
         "listener": rt.gateway.health_snapshot(),
         "pictures": {**stats, "lock_remaining_s": rt.client.lock_remaining},
+        "recent_decisions": [
+            {
+                "serial": r.get("serial_number"),
+                "ts": r.get("timestamp"),
+                "person": bool(r.get("person_id")),
+                "minor": r.get("minor_event_type"),
+                "live": r.get("is_live"),
+                "has_url": r.get("has_url"),
+                "has_file": r.get("has_file"),
+            }
+            for r in recent
+        ],
         "last_access": (
             {
                 "person": last.person_name,
