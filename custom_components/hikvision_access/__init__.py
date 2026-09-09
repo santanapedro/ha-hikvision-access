@@ -132,7 +132,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
             add_extra_js_url(hass, f"{_CARD_URL}?v={_CARD_VERSION}")
         else:
             _LOGGER.debug("frontend not loaded; card served but not auto-added")
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.warning("could not register the Lovelace card", exc_info=True)
 
 
