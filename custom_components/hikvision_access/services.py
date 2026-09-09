@@ -123,3 +123,19 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE_PUSH, _remove_push, _TARGET_SCHEMA
     )
+
+
+_ALL_SERVICES = (
+    SERVICE_OPEN_DOOR,
+    SERVICE_RECONCILE_NOW,
+    SERVICE_SYNC_PERSONS,
+    SERVICE_SETUP_PUSH,
+    SERVICE_REMOVE_PUSH,
+)
+
+
+def async_unload_services(hass: HomeAssistant) -> None:
+    """Drop the integration's services once the last config entry is gone."""
+    for name in _ALL_SERVICES:
+        if hass.services.has_service(DOMAIN, name):
+            hass.services.async_remove(DOMAIN, name)

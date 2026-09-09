@@ -44,6 +44,33 @@ Legenda: ✅ testado · 🧪 código pronto, aguardando teste no hardware · ⚠
 
 Nos dois casos, `AcsEvent` é consultado periodicamente para reconciliar (spec §10).
 
+## Recursos e armazenamento
+
+- **Disco**: as fotos ficam em `<config>/hikvision_access/<entry_id>/media/` (nunca em
+  `/config/www`), particionadas por mês, purgadas a cada 6 h conforme
+  **Retenção de imagens** (padrão 90 dias; `0` = ilimitado). Estimativa: ~40 KB por
+  acesso — com ~50 acessos/dia e 90 dias, ~180 MB por terminal. O banco SQLite
+  (`hikvision_access.db`, separado do recorder do HA) é pequeno, **a menos que**
+  você ligue *Salvar payload bruto do evento* (deixe desligado salvo para depurar).
+- **Rede/CPU**: cada chamada ISAPI faz um desafio Digest novo (2 requisições) para
+  não esbarrar no anti-brute-force do terminal. Em regime normal: `alertStream`
+  aberto + reconciliação a cada 60 s + status da porta a cada 30 s. Se o terminal
+  tiver interfone, há também um *poll* da campainha — ajuste **Intervalo de checagem
+  da campainha** (padrão 15 s) para reduzir o tráfego.
+- **Memória**: alguns MB por terminal; downloads de foto são limitados e a fila de
+  push é limitada.
+
+## Segurança
+
+- **Validar SSL** vem **desligado** por padrão porque o terminal usa certificado
+  self-signed. Nesse modo um ataque MITM na rede local é teoricamente possível;
+  mantenha o terminal numa VLAN de confiança. Se você instalar um certificado
+  válido no terminal, ligue a opção.
+- A câmera usa **RTSP com as credenciais embutidas na URL** (padrão do HA para
+  câmeras RTSP). O token da rota *push* fica gravado no `httpHosts` do terminal.
+- Eventos e fotos são servidos apenas pela rota autenticada do HA — qualquer
+  usuário logado no HA consegue vê-los (igual às câmeras do HA).
+
 ## Privacidade (LGPD — spec §28)
 
 Armazenamento **somente local**, retenção configurável, imagens servidas apenas

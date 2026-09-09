@@ -13,6 +13,14 @@
           "verify_ssl": "Validar certificado SSL",
           "name": "Nome (opcional)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reautenticar no terminal",
+        "description": "As credenciais do terminal em {host} foram recusadas. Informe o usuário e a senha atuais.",
+        "data": {
+          "username": "Usuário ISAPI",
+          "password": "Senha"
+        }
       }
     },
     "error": {
@@ -23,7 +31,9 @@
       "unknown": "Erro inesperado."
     },
     "abort": {
-      "already_configured": "Este terminal já está configurado."
+      "already_configured": "Este terminal já está configurado.",
+      "reauth_successful": "Credenciais atualizadas.",
+      "wrong_device": "O terminal que respondeu tem outro número de série; verifique o endereço."
     }
   },
   "options": {
@@ -37,6 +47,7 @@
           "also_run_stream": "Manter também o alertStream ativo",
           "enable_camera": "Criar câmera de visualização ao vivo (RTSP)",
           "rtsp_port": "Porta RTSP",
+          "call_poll_interval_s": "Intervalo de checagem da campainha (s)",
           "reconcile_interval_s": "Intervalo de reconciliação (s)",
           "image_retention_days": "Retenção de imagens (dias, 0 = ilimitado)",
           "store_granted_images": "Salvar fotos de acessos permitidos",

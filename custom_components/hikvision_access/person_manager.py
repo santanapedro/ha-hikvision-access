@@ -7,6 +7,7 @@ Cache TTL is 24 h; a miss (or a cached row still missing the name) triggers a
 from __future__ import annotations
 
 import logging
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -16,6 +17,7 @@ from .exceptions import HikvisionError
 _LOGGER = logging.getLogger(__name__)
 
 _TTL = timedelta(hours=24)
+_NEG_TTL_S = 3600  # don't re-hit the terminal for an employeeNo it doesn't know
 
 
 class PersonManager:
@@ -31,6 +33,7 @@ class PersonManager:
         self._device_id = device_id
         self._images = images
         self._inflight: set[str] = set()
+        self._negative: dict[str, float] = {}
 
     async def async_resolve(self, person_id: str) -> dict | None:
         cached = await self._store.async_get_person(self._device_id, person_id)
@@ -38,6 +41,9 @@ class PersonManager:
             return cached
 
         if person_id in self._inflight:
+            return cached
+        deadline = self._negative.get(person_id)
+        if deadline and deadline > time.monotonic():
             return cached
         self._inflight.add(person_id)
         try:
@@ -49,7 +55,9 @@ class PersonManager:
             self._inflight.discard(person_id)
 
         if not info:
+            self._negative[person_id] = time.monotonic() + _NEG_TTL_S
             return cached
+        self._negative.pop(person_id, None)
 
         name = info.get("name")
         picture_path = None

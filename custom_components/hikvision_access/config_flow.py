@@ -30,6 +30,7 @@ from .const import (
     CONF_USE_HTTPS,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_CALL_POLL_INTERVAL_S,
     DEFAULT_EVENT_ROUTE,
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
@@ -40,9 +41,12 @@ from .const import (
     DEFAULT_USE_HTTPS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    MAX_CALL_POLL_INTERVAL_S,
     MAX_RECONCILE_INTERVAL_S,
+    MIN_CALL_POLL_INTERVAL_S,
     MIN_RECONCILE_INTERVAL_S,
     OPT_ALSO_RUN_STREAM,
+    OPT_CALL_POLL_INTERVAL,
     OPT_CREATE_OPEN_DOOR_BUTTON,
     OPT_ENABLE_CAMERA,
     OPT_EVENT_ROUTE,
@@ -152,7 +156,53 @@ class HikvisionAccessConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-enter credentials for an existing terminal after auth failed."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data = {
+                **entry.data,
+                CONF_USERNAME: user_input[CONF_USERNAME].strip(),
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            try:
+                info, _caps = await _probe(self.hass, data)
+            except HikvisionLockoutError:
+                errors["base"] = "lockout"
+            except HikvisionAuthError:
+                errors["base"] = "invalid_auth"
+            except HikvisionTimeoutError:
+                errors["base"] = "timeout"
+            except HikvisionConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error on reauth for %s", data[CONF_HOST])
+                errors["base"] = "unknown"
+            else:
+                if entry.unique_id and info.serial_number != entry.unique_id:
+                    return self.async_abort(reason="wrong_device")
+                return self.async_update_reload_and_abort(entry, data=data)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=entry.data.get(CONF_USERNAME, "")
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"host": entry.data.get(CONF_HOST, "")},
+        )
 
     @staticmethod
     @callback
@@ -173,6 +223,7 @@ def _default_options() -> dict[str, Any]:
         OPT_CREATE_OPEN_DOOR_BUTTON: True,
         OPT_ENABLE_CAMERA: True,
         OPT_RTSP_PORT: DEFAULT_RTSP_PORT,
+        OPT_CALL_POLL_INTERVAL: DEFAULT_CALL_POLL_INTERVAL_S,
         OPT_REQUEST_TIMEOUT: DEFAULT_REQUEST_TIMEOUT_S,
         OPT_MASK_CARD_NUMBER: True,
     }
@@ -235,6 +286,15 @@ class HikvisionAccessOptionsFlow(OptionsFlow):
                     vol.Required(
                         OPT_RTSP_PORT, default=opts[OPT_RTSP_PORT]
                     ): vol.All(int, vol.Range(min=1, max=65535)),
+                    vol.Required(
+                        OPT_CALL_POLL_INTERVAL,
+                        default=opts[OPT_CALL_POLL_INTERVAL],
+                    ): vol.All(
+                        int,
+                        vol.Range(
+                            min=MIN_CALL_POLL_INTERVAL_S, max=MAX_CALL_POLL_INTERVAL_S
+                        ),
+                    ),
                     vol.Required(
                         OPT_MASK_CARD_NUMBER, default=opts[OPT_MASK_CARD_NUMBER]
                     ): bool,

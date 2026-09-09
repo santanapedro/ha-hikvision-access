@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import HikvisionISAPIClient
 from .const import (
-    CALL_POLL_INTERVAL_S,
+    DEFAULT_CALL_POLL_INTERVAL_S,
     DOMAIN,
     EP_ACS_WORK_STATUS,
     HEALTH_POLL_INTERVAL_S,
@@ -109,9 +109,13 @@ class HikvisionCallCoordinator(_LockAwareCoordinator):
     """
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, client: HikvisionISAPIClient
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        client: HikvisionISAPIClient,
+        interval_s: int = DEFAULT_CALL_POLL_INTERVAL_S,
     ) -> None:
-        self._base_interval = timedelta(seconds=CALL_POLL_INTERVAL_S)
+        self._base_interval = timedelta(seconds=interval_s)
         super().__init__(
             hass, _LOGGER, name=f"{DOMAIN}_call", update_interval=self._base_interval
         )

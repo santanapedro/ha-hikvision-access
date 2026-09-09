@@ -29,6 +29,7 @@ OPT_REGISTER_PUSH_ON_DEVICE: Final = "register_push_on_device"
 OPT_ALSO_RUN_STREAM: Final = "also_run_stream"
 OPT_ENABLE_CAMERA: Final = "enable_camera"
 OPT_RTSP_PORT: Final = "rtsp_port"
+OPT_CALL_POLL_INTERVAL: Final = "call_poll_interval_s"
 
 # stored in the config entry after we successfully claim a push slot
 DATA_PUSH_TOKEN: Final = "push_token"
@@ -57,8 +58,10 @@ HEALTH_POLL_INTERVAL_S: Final = 30
 
 # doorbell / call-status polling (fallback for terminals where the call event
 # does not arrive on the alertStream). Kept modest: every poll is 2 requests
-# and this firmware locks logins under load.
-CALL_POLL_INTERVAL_S: Final = 10
+# and this firmware locks logins under load. User-tunable (see options flow).
+DEFAULT_CALL_POLL_INTERVAL_S: Final = 15
+MIN_CALL_POLL_INTERVAL_S: Final = 5
+MAX_CALL_POLL_INTERVAL_S: Final = 300
 DEFAULT_RTSP_PORT: Final = 554
 
 # --- reconnect backoff for the alertStream listener (spec §9.2) ---

@@ -525,8 +525,8 @@ class HikvisionISAPIClient:
             resp.release()
         acknowledged = (
             "<statusCode>1</statusCode>" in body
-            or '"statusCode":\t1' in body
-            or "OK" in body
+            or "<statusString>OK</statusString>" in body
+            or re.search(r'"statusCode"\s*:\s*1\b', body) is not None
         )
         if not acknowledged:
             raise HikvisionProtocolError(f"door command not acknowledged: {body[:200]}")

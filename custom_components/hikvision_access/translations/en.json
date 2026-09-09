@@ -13,6 +13,14 @@
           "verify_ssl": "Verify SSL certificate",
           "name": "Name (optional)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with the terminal",
+        "description": "The credentials for the terminal at {host} were rejected. Enter the current username and password.",
+        "data": {
+          "username": "ISAPI user",
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -23,7 +31,9 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This terminal is already configured."
+      "already_configured": "This terminal is already configured.",
+      "reauth_successful": "Credentials updated.",
+      "wrong_device": "The terminal that answered has a different serial number; check the address."
     }
   },
   "options": {
@@ -43,7 +53,8 @@
           "create_open_door_button": "Create open-door button",
           "mask_card_number": "Mask card number",
           "enable_camera": "Create a live-view camera (RTSP)",
-          "rtsp_port": "RTSP port"
+          "rtsp_port": "RTSP port",
+          "call_poll_interval_s": "Doorbell poll interval (s)"
         }
       }
     }

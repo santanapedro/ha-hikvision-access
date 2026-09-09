@@ -31,6 +31,7 @@ from .const import (
     CONF_VERIFY_SSL,
     DATA_PUSH_SLOT,
     DATA_PUSH_TOKEN,
+    DEFAULT_CALL_POLL_INTERVAL_S,
     DEFAULT_EVENT_ROUTE,
     DEFAULT_IMAGE_RETENTION_DAYS,
     DEFAULT_RECONCILE_INTERVAL_S,
@@ -38,6 +39,7 @@ from .const import (
     EP_ALERT_STREAM,
     EP_DOOR_PARAM,
     OPT_ALSO_RUN_STREAM,
+    OPT_CALL_POLL_INTERVAL,
     OPT_EVENT_ROUTE,
     OPT_IMAGE_RETENTION_DAYS,
     OPT_RECONCILE_INTERVAL,
@@ -58,7 +60,7 @@ from .image_manager import ImageManager
 from .models import DeviceCapabilities, DeviceInfo
 from .person_manager import PersonManager
 from .push import HikvisionPushView, async_claim_slot, async_release_slot, new_token
-from .services import async_setup_services
+from .services import async_setup_services, async_unload_services
 from .storage import EventStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +203,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
 
     call: HikvisionCallCoordinator | None = None
     if capabilities.intercom:
-        call = HikvisionCallCoordinator(hass, entry, client)
+        call = HikvisionCallCoordinator(
+            hass,
+            entry,
+            client,
+            int(opts.get(OPT_CALL_POLL_INTERVAL, DEFAULT_CALL_POLL_INTERVAL_S)),
+        )
         try:
             await call.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
@@ -362,6 +369,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) -
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         await runtime.store.async_close()
+        others = [
+            e
+            for e in hass.config_entries.async_entries(DOMAIN)
+            if e.entry_id != entry.entry_id
+        ]
+        if not others:
+            async_unload_services(hass)
     return unloaded
 
 
