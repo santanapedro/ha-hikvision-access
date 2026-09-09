@@ -186,16 +186,25 @@ class HikvisionISAPIClient:
             while resp.status == 401 and attempts < 3:
                 attempts += 1
                 body = await resp.text()
-                challenge = resp.headers.get("WWW-Authenticate", "")
+                challenges = resp.headers.getall("WWW-Authenticate", [])
+                digest_challenge = next(
+                    (c for c in challenges if "Digest" in c), ""
+                )
                 resp.release()
+                _LOGGER.debug(
+                    "401 on %s (try %d): www-auth=%r body=%r",
+                    endpoint, attempts, challenges, body[:200],
+                )
                 self._raise_if_locked(body)
-                if "Digest" in challenge:
+                if digest_challenge:
                     async with self._auth_lock:
                         if self._digest_epoch == epoch:
-                            self._digest.load_challenge(challenge)
+                            self._digest.load_challenge(digest_challenge)
                             self._digest_epoch += 1
                 elif "<userCheck" in body:
-                    raise HikvisionAuthError("credentials rejected by terminal")
+                    raise HikvisionAuthError(
+                        f"credentials rejected by terminal (body: {body[:160]!r})"
+                    )
                 else:
                     await self._async_refresh_challenge(stale_epoch=epoch)
                 resp, epoch = await _send()
@@ -233,8 +242,12 @@ class HikvisionISAPIClient:
             async with self._session.get(
                 self._base + EP_DEVICE_INFO, timeout=to
             ) as probe:
-                challenge = probe.headers.get("WWW-Authenticate", "")
-                if probe.status == 401 and "Digest" in challenge:
+                challenges = probe.headers.getall("WWW-Authenticate", [])
+                challenge = next((c for c in challenges if "Digest" in c), "")
+                _LOGGER.debug(
+                    "refresh challenge: status=%s www-auth=%r", probe.status, challenges
+                )
+                if probe.status == 401 and challenge:
                     self._digest.load_challenge(challenge)
                     self._digest_epoch += 1
                 elif probe.status == 200:
@@ -514,10 +527,12 @@ class HikvisionISAPIClient:
             resp = await _open(fresh=True)
             if resp.status == 401:
                 body = await resp.text()
-                challenge = resp.headers.get("WWW-Authenticate", "")
+                challenges = resp.headers.getall("WWW-Authenticate", [])
+                challenge = next((c for c in challenges if "Digest" in c), "")
                 resp.release()
+                _LOGGER.debug("stream 401: www-auth=%r body=%r", challenges, body[:200])
                 self._raise_if_locked(body)
-                if "Digest" in challenge:
+                if challenge:
                     async with self._auth_lock:
                         self._digest.load_challenge(challenge)
                         self._digest_epoch += 1
