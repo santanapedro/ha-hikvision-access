@@ -36,7 +36,7 @@ pessoa → horário → permitido/negado → foto → abrir porta → histórico
 - [ ] Testar `PUT RemoteControl/door/1` de verdade (ação física)
 - [ ] `.github/workflows/` — hassfest + HACS validation + pytest
 
-## Fase 2 — UI
+## Fase 2 — UI (planejado)
 
 - [ ] `hikvision-access-card` (timeline, filtros, paginação)
 - [ ] WebSocket `hikvision_access/subscribe`
@@ -58,3 +58,12 @@ pessoa → horário → permitido/negado → foto → abrir porta → histórico
 5. `httpHosts` slot 2 — registrar sem afetar o slot 1 da Avant
 6. encoding dos nomes (`CÁSSIA` chegou como `C�SSIA` no JSON) — charset do terminal
 7. `isSupportEventOptimizationCfg` / `isSupportEventStorageCfg` — podem controlar o re-dump histórico do alertStream
+
+## Fase 2 — parcial (feito nesta rodada)
+
+- [x] `camera.py` — câmera ao vivo (RTSP 1080p + snapshot ISAPI)
+- [x] Campainha / vídeo-porteiro — `HikvisionCallCoordinator` (poll `VideoIntercom/callStatus` 3s),
+      `binary_sensor.*_campainha`, `event.*_campainha` (ring/answered/ended + bus event)
+- [x] Restore de "último acesso" do banco no restart
+- [ ] `hikvision-access-card` (timeline Lovelace) — ainda não
+- [ ] Capturar o evento de chamada no alertStream p/ trocar o poll por push
