@@ -13,6 +13,7 @@ import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -71,6 +72,37 @@ class EventGateway:
     @property
     def images(self):
         return self._images
+
+    async def async_restore(self) -> None:
+        """Seed 'last access' state from the DB so sensors survive a restart."""
+        row = await self._store.async_latest_event(self.device_serial)
+        if not row:
+            return
+        try:
+            ts = dt_util.parse_datetime(row["timestamp"])
+        except (KeyError, TypeError, ValueError):
+            return
+        event = AccessEvent(
+            event_uid=row["event_uid"],
+            device_id=row["device_id"],
+            timestamp=ts or dt_util.utcnow(),
+            serial_number=row.get("serial_number"),
+            door_id=row.get("door_id"),
+            door_name=row.get("door_name"),
+            person_id=row.get("person_id"),
+            person_name=row.get("person_name"),
+            card_number=row.get("card_number"),
+            authentication_method=row.get("authentication_method"),
+            access_result=row.get("access_result") or "unknown",
+            major_event_type=row.get("major_event_type"),
+            minor_event_type=row.get("minor_event_type"),
+            event_picture_path=row.get("event_picture_path"),
+            user_picture_path=row.get("user_picture_path"),
+            is_live=False,
+        )
+        self.last_event = event
+        if map_event(event.major_event_type, event.minor_event_type).is_access_decision:
+            self.last_access_event = event
 
     async def async_handle(self, event: AccessEvent, *, source: str) -> bool:
         """Process one event. Returns True if it was new."""

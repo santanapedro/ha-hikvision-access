@@ -163,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
         persons,
         dict(opts),
     )
+    await gateway.async_restore()
 
     health = HikvisionHealthCoordinator(hass, entry, client)
     await health.async_config_entry_first_refresh()
