@@ -107,3 +107,23 @@ O terminal oferece **duas rotas**, e este equipamento **já usa a de push**:
 4. `doorStatus` no `AcsWorkStatus` retornou `[4]` — mapear valores (0/1/2/4 = ?).
 5. Foto cadastrada (`faceURL`) — confirmar download com Digest.
 6. Slot 2 do `httpHosts` — testar registro de um segundo host sem afetar o slot 1 da Avant.
+
+---
+
+## Adendo — comportamento do FW V4.48.40 (descoberto rodando ao vivo)
+
+Os dois terminais foram atualizados para **V4.48.40** depois da homologação inicial.
+Mudanças de comportamento que quebraram o cliente e foram corrigidas no **v0.1.5**:
+
+- **Reuso de nonce Digest é limitado**: o 3º uso do mesmo nonce é rejeitado com
+  `401 <userCheck>` (sem header `WWW-Authenticate`). O `requests.HTTPDigestAuth`
+  nunca trava porque pede um desafio novo a cada request — o cliente agora faz igual
+  (`_fresh_digest()`, um `GET` sem auth por request). Requests sem auth **não** contam
+  para o lockout.
+- **realm** agora vem em minúsculas (`DS-6e392e44`).
+- **`alertStream`**: o slot fica preso por bastante tempo depois que o cliente
+  desconecta; toda nova conexão responde `404 <ResponseStatus>` até liberar.
+  → `HikvisionStreamBusyError`, listener recua 120s, reconciliador cobre.
+- 401 por nonce velho = `<ResponseStatus>` `invalidOperation`; 401 por senha errada /
+  contador de tentativas = `<userCheck>` com `<retryLoginTime>N`; lock de fato =
+  `<lockStatus>lock</lockStatus>` + `<unlockTime>`.
