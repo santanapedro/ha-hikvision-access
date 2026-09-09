@@ -110,20 +110,30 @@ _CARD_VERSION = "0.2.0"
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
-    """Serve the Lovelace card and make it available without a manual resource."""
+    """Serve the Lovelace card and make it available without a manual resource.
+
+    Best-effort: a missing frontend (e.g. in a headless test env) must not
+    fail integration setup.
+    """
     store = hass.data.setdefault(DOMAIN, {})
     if store.get("frontend"):
         return
     store["frontend"] = True
+    try:
+        from homeassistant.components.http import StaticPathConfig
 
-    from homeassistant.components.frontend import add_extra_js_url
-    from homeassistant.components.http import StaticPathConfig
+        src = Path(__file__).parent / "frontend" / "hikvision-access-card.js"
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(_CARD_URL, str(src), cache_headers=False)]
+        )
+        if "frontend" in hass.config.components:
+            from homeassistant.components.frontend import add_extra_js_url
 
-    src = Path(__file__).parent / "frontend" / "hikvision-access-card.js"
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(_CARD_URL, str(src), cache_headers=False)]
-    )
-    add_extra_js_url(hass, f"{_CARD_URL}?v={_CARD_VERSION}")
+            add_extra_js_url(hass, f"{_CARD_URL}?v={_CARD_VERSION}")
+        else:
+            _LOGGER.debug("frontend not loaded; card served but not auto-added")
+    except Exception:  # noqa: BLE001
+        _LOGGER.warning("could not register the Lovelace card", exc_info=True)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) -> bool:
