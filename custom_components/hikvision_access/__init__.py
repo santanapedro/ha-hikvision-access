@@ -105,6 +105,27 @@ def _get_push_view(hass: HomeAssistant) -> HikvisionPushView:
     return view
 
 
+_CARD_URL = "/hikvision_access_frontend/hikvision-access-card.js"
+_CARD_VERSION = "0.2.0"
+
+
+async def _async_register_frontend(hass: HomeAssistant) -> None:
+    """Serve the Lovelace card and make it available without a manual resource."""
+    store = hass.data.setdefault(DOMAIN, {})
+    if store.get("frontend"):
+        return
+    store["frontend"] = True
+
+    from homeassistant.components.frontend import add_extra_js_url
+    from homeassistant.components.http import StaticPathConfig
+
+    src = Path(__file__).parent / "frontend" / "hikvision-access-card.js"
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(_CARD_URL, str(src), cache_headers=False)]
+    )
+    add_extra_js_url(hass, f"{_CARD_URL}?v={_CARD_VERSION}")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) -> bool:
     data = entry.data
     opts = entry.options
@@ -237,8 +258,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
         serial_number=info.serial_number,
     )
 
-    # frontend API (once) + push view target
+    # frontend API + Lovelace card (once) + push view target
     async_register_http_api(hass)
+    await _async_register_frontend(hass)
     push_view = _get_push_view(hass)
     token = entry.data.get(DATA_PUSH_TOKEN) or new_token()
     if token != entry.data.get(DATA_PUSH_TOKEN):

@@ -72,9 +72,6 @@ class EventsView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         hass = request.app["hass"]
         q = request.query
-        store, _ = _resolve_store(hass, q.get("entry_id"))
-        if store is None:
-            return self.json_message("entry_id required", 400)
 
         def _dt(name: str):
             raw = q.get(name)
@@ -89,21 +86,37 @@ class EventsView(HomeAssistantView):
             ts, _, uid = q["cursor"].partition("|")
             before = (ts, uid)
 
-        rows = await store.async_query_events(
-            device_id=q.get("device_id"),
-            start=_dt("start"),
-            end=_dt("end"),
-            result=q.get("result"),
-            person_id=q.get("person_id"),
-            limit=limit,
-            before=before,
-        )
+        rts = _runtimes(hass)
+        wanted = q.get("entry_id")
+        targets = {wanted: rts[wanted]} if wanted in rts else rts
+        if not targets:
+            return self.json({"events": [], "next_cursor": None})
+
+        names = {
+            rt.info.serial_number: rt.gateway.device_name for rt in targets.values()
+        }
+        merged: list[dict] = []
+        for rt in targets.values():
+            merged += await rt.store.async_query_events(
+                start=_dt("start"),
+                end=_dt("end"),
+                result=q.get("result"),
+                person_id=q.get("person_id"),
+                limit=limit,
+                before=before,
+            )
+        merged.sort(key=lambda r: (r["timestamp"], r["event_uid"]), reverse=True)
+        merged = merged[:limit]
+
         next_cursor = None
-        if len(rows) == limit:
-            last = rows[-1]
+        if len(merged) == limit:
+            last = merged[-1]
             next_cursor = f"{last['timestamp']}|{last['event_uid']}"
         return self.json(
-            {"events": [_public(r) for r in rows], "next_cursor": next_cursor}
+            {
+                "events": [_public(r, names) for r in merged],
+                "next_cursor": next_cursor,
+            }
         )
 
 
@@ -162,13 +175,16 @@ async def _serve_image(hass: HomeAssistant, path: str) -> web.Response:
     return web.Response(body=data, content_type="image/jpeg")
 
 
-def _public(row: dict[str, Any]) -> dict[str, Any]:
+def _public(
+    row: dict[str, Any], names: dict[str, str] | None = None
+) -> dict[str, Any]:
     return {
         "event_uid": row["event_uid"],
         "timestamp": row["timestamp"],
         "person_id": row.get("person_id"),
         "person_name": row.get("person_name"),
         "device_id": row.get("device_id"),
+        "device_name": (names or {}).get(row.get("device_id", "")),
         "door_name": row.get("door_name") or row.get("door_id"),
         "method": row.get("authentication_method"),
         "result": row.get("access_result"),
