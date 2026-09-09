@@ -126,9 +126,13 @@ class HikvisionConnectionSensor(_HealthBase):
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, signal_access(self._entry_id), lambda _e: self.async_write_ha_state()
+                self.hass, signal_access(self._entry_id), self._on_access
             )
         )
+
+    @callback
+    def _on_access(self, _event: AccessEvent) -> None:
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> str:

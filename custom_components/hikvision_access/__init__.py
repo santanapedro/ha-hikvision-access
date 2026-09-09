@@ -14,7 +14,7 @@ from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -267,11 +267,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
     if listener is not None:
         listener.start()
 
+    @callback
+    def _schedule_purge(_now) -> None:
+        hass.async_create_task(_daily_purge(runtime))
+
     unsubs.append(
-        async_track_time_interval(
-            hass, lambda _n: hass.async_create_task(_daily_purge(runtime)),
-            timedelta(hours=6),
-        )
+        async_track_time_interval(hass, _schedule_purge, timedelta(hours=6))
     )
     entry.async_on_unload(entry.add_update_listener(_async_reload_on_update))
     return True

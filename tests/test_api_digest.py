@@ -40,6 +40,27 @@ def test_digest_nonce_count_increments():
     assert second == "00000002"
 
 
+def test_digest_nc_resets_on_new_nonce():
+    """A fresh nonce must restart nc at 1 (the terminal rejects otherwise)."""
+    d = _Digest("u", "p")
+    d.load_challenge(CHALLENGE)
+    d.header("GET", "/a")
+    d.header("GET", "/a")  # nc now at 2
+    other = CHALLENGE.replace("NjY1", "ZZZ9")  # different nonce
+    d.load_challenge(other)
+    nc = dict(p.split("=", 1) for p in d.header("GET", "/a")[7:].split(", "))["nc"]
+    assert nc == "00000001"
+
+
+def test_digest_same_nonce_keeps_counting():
+    d = _Digest("u", "p")
+    d.load_challenge(CHALLENGE)
+    d.header("GET", "/a")
+    d.load_challenge(CHALLENGE)  # same nonce again
+    nc = dict(p.split("=", 1) for p in d.header("GET", "/a")[7:].split(", "))["nc"]
+    assert nc == "00000002"
+
+
 def test_lockout_detection():
     body = (
         "<userCheck><statusValue>401</statusValue>"
