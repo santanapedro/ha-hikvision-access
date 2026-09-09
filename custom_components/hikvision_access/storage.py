@@ -351,7 +351,10 @@ class EventStore:
                 "FROM events WHERE device_id=?",
                 (device_id,),
             ).fetchone()
-            return {k: int(row[k] or 0) for k in row.keys()}
+            return {
+                k: int(row[k] or 0)
+                for k in ("total", "decisions", "with_url", "with_file")
+            }
 
         return await self._run(_q)
 
