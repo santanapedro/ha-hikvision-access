@@ -75,14 +75,29 @@ class EventGateway:
 
     async def async_restore(self) -> None:
         """Seed 'last access' state from the DB so sensors survive a restart."""
-        row = await self._store.async_latest_event(self.device_serial)
-        if not row:
-            return
+        latest = await self._store.async_latest_event(self.device_serial)
+        if latest:
+            self.last_event = self._row_to_event(latest)
+        # the newest row is often a door lock/unlock — find the newest one that
+        # is an actual access decision for the "last access" sensors
+        for result in ("granted", "denied"):
+            rows = await self._store.async_query_events(
+                device_id=self.device_serial, result=result, limit=1
+            )
+            if rows:
+                cand = self._row_to_event(rows[0])
+                if cand and (
+                    self.last_access_event is None
+                    or cand.timestamp > self.last_access_event.timestamp
+                ):
+                    self.last_access_event = cand
+
+    def _row_to_event(self, row: dict) -> AccessEvent | None:
         try:
             ts = dt_util.parse_datetime(row["timestamp"])
         except (KeyError, TypeError, ValueError):
-            return
-        event = AccessEvent(
+            return None
+        return AccessEvent(
             event_uid=row["event_uid"],
             device_id=row["device_id"],
             timestamp=ts or dt_util.utcnow(),
@@ -100,9 +115,6 @@ class EventGateway:
             user_picture_path=row.get("user_picture_path"),
             is_live=False,
         )
-        self.last_event = event
-        if map_event(event.major_event_type, event.minor_event_type).is_access_decision:
-            self.last_access_event = event
 
     async def async_handle(self, event: AccessEvent, *, source: str) -> bool:
         """Process one event. Returns True if it was new."""
