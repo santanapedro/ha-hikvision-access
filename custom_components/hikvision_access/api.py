@@ -144,6 +144,22 @@ class HikvisionISAPIClient:
         self._min_spacing = 0.05
         self._last_request = 0.0
         self._pace_lock = asyncio.Lock()
+        # When the terminal locks us out, stop touching it entirely until the
+        # window passes — otherwise every poller keeps the lock alive.
+        self._locked_until = 0.0
+
+    @property
+    def lock_remaining(self) -> int:
+        return max(0, int(self._locked_until - time.monotonic()))
+
+    def _check_lock(self) -> None:
+        remaining = self.lock_remaining
+        if remaining > 0:
+            raise HikvisionLockoutError(remaining)
+
+    def _note_lock(self, unlock_seconds: int | None) -> None:
+        wait = unlock_seconds if unlock_seconds and unlock_seconds > 0 else 300
+        self._locked_until = max(self._locked_until, time.monotonic() + wait)
 
     async def _pace(self) -> None:
         async with self._pace_lock:
@@ -155,6 +171,7 @@ class HikvisionISAPIClient:
     async def _fresh_digest(self, method: str, uri: str) -> str | None:
         """Unauthenticated probe -> parse challenge -> return one Authorization
         header. ``None`` if the endpoint needs no auth."""
+        self._check_lock()
         to = aiohttp.ClientTimeout(total=self._timeout)
         async with self._session.get(
             self._base + EP_DEVICE_INFO, timeout=to
@@ -199,6 +216,7 @@ class HikvisionISAPIClient:
 
         to = aiohttp.ClientTimeout(total=timeout or self._timeout)
 
+        self._check_lock()
         try:
             async with self._gate:
                 await self._pace()
@@ -217,6 +235,8 @@ class HikvisionISAPIClient:
                 raise HikvisionConnectionError(
                     f"{method} {endpoint}: Digest rejected ({body[:120]!r})"
                 )
+        except HikvisionLockoutError:
+            raise
         except aiohttp.ClientConnectorError as err:
             raise HikvisionConnectionError(str(err)) from err
         except TimeoutError as err:
@@ -235,28 +255,31 @@ class HikvisionISAPIClient:
         return resp
 
     @staticmethod
-    def _raise_if_locked(body: str) -> None:
-        """Raise if the 401 body signals the terminal's brute-force lock.
+    def _parse_lock_seconds(body: str) -> int | None:
+        """Seconds of lock signalled by a 401 body, or None if not a lock.
 
-        Covers: an explicit ``<lockStatus>lock</lockStatus>`` (careful — the
-        string ``unlock`` also contains ``lock``), an ``<unlockTime>``, or a
-        ``<userCheck>`` reporting the failed-login counter (``retryLoginTime``).
-        A wrong password is not distinguishable here from a lock, and the
-        credentials were already validated by the config flow, so any
-        ``<userCheck>`` rejection is treated as a lock and retried later.
+        Careful: ``<lockStatus>unlock</lockStatus>`` also contains ``lock``.
+        ``<retryLoginTime>`` (failed-login counter) means the terminal is
+        tracking us toward a lock — a wrong password is not distinguishable
+        here, and the config flow already validated the credentials.
         """
         if re.search(r"<lockStatus>\s*lock\s*</lockStatus>", body):
             m = re.search(r"<unlockTime>(\d+)</unlockTime>", body)
-            raise HikvisionLockoutError(int(m.group(1)) if m else 300)
+            return int(m.group(1)) if m else 300
         m = re.search(r"<unlockTime>(\d+)</unlockTime>", body)
         if m and int(m.group(1)) > 0:
-            raise HikvisionLockoutError(int(m.group(1)))
-        # A <userCheck> that reports the failed-login counter means the terminal
-        # is tracking us toward a lock. The plain "not authenticated yet"
-        # challenge body never carries <retryLoginTime>. Back off rather than
-        # burning another attempt (which is what triggers the actual lock).
+            return int(m.group(1))
         if "<retryLoginTime>" in body:
-            raise HikvisionLockoutError(180)
+            return 180
+        return None
+
+    def _raise_if_locked(self, body: str) -> None:
+        """Raise + park the client so no poller keeps refreshing the lock."""
+        seconds = self._parse_lock_seconds(body)
+        if seconds is None:
+            return
+        self._note_lock(seconds)
+        raise HikvisionLockoutError(seconds)
 
     async def _get_text(self, endpoint: str, **kw: Any) -> str:
         resp = await self._request("GET", endpoint, **kw)

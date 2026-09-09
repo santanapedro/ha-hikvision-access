@@ -35,6 +35,24 @@ async def test_max_serial_tracks_highest(store):
     assert await store.async_max_serial("d1") == 42
 
 
+async def test_access_only_excludes_door_events(store):
+    base = datetime(2026, 9, 1, tzinfo=UTC)
+    # a granted face access + its door cycle (no person, unknown result)
+    await store.async_insert_event(
+        _event("d1:1", "1", base, person_id="7", access_result="granted",
+               minor_event_type="75")
+    )
+    for i, minor in enumerate((21, 22, 23, 24), start=2):
+        await store.async_insert_event(
+            _event(f"d1:{i}", str(i), base + timedelta(seconds=i),
+                   access_result="unknown", minor_event_type=str(minor))
+        )
+    all_rows = await store.async_query_events(device_id="d1")
+    assert len(all_rows) == 5
+    only = await store.async_query_events(device_id="d1", access_only=True)
+    assert [r["event_uid"] for r in only] == ["d1:1"]
+
+
 async def test_query_filters_and_cursor(store):
     base = datetime(2026, 9, 1, tzinfo=UTC)
     for i in range(5):

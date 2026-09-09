@@ -42,9 +42,22 @@ class ImageManager:
     async def async_fetch_event_image(self, event: AccessEvent) -> str | None:
         if not event.event_picture_url:
             return None
-        month = event.timestamp.strftime("%Y%m")
-        rel = Path("events") / month / f"{_safe(event.event_uid)}.jpg"
-        return await self._download(event.event_picture_url, rel)
+        return await self.async_fetch_event_image_url(
+            event.event_uid, event.event_picture_url, event.timestamp
+        )
+
+    async def async_fetch_event_image_url(
+        self, event_uid: str, url: str, when
+    ) -> str | None:
+        """Download an event photo by uid + URL (also used for backfill)."""
+        if not url:
+            return None
+        if hasattr(when, "strftime"):
+            month = when.strftime("%Y%m")
+        else:
+            month = str(when)[:7].replace("-", "")
+        rel = Path("events") / month / f"{_safe(event_uid)}.jpg"
+        return await self._download(url, rel)
 
     async def async_fetch_user_image(self, person_id: str, url: str) -> str | None:
         rel = Path("users") / f"{_safe(person_id)}.jpg"

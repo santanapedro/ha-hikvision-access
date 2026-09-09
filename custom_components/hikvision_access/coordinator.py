@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
+from typing import Any, NoReturn
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,25 +41,43 @@ class HealthData:
     raw: dict[str, Any] = field(default_factory=dict)
 
 
-class HikvisionHealthCoordinator(DataUpdateCoordinator[HealthData]):
+class _LockAwareCoordinator(DataUpdateCoordinator):
+    """Skips the network entirely while the client is parked in a lockout, and
+    stretches its own poll interval to the unlock time so it stops hammering."""
+
+    _base_interval: timedelta
+
+    def _guard_lock(self) -> None:
+        remaining = self.client.lock_remaining
+        if remaining:
+            self.update_interval = timedelta(seconds=min(remaining + 5, 300))
+            raise UpdateFailed(f"terminal locked out (~{remaining}s)")
+        if self.update_interval != self._base_interval:
+            self.update_interval = self._base_interval
+
+    def _on_lockout(self, err: HikvisionLockoutError) -> NoReturn:
+        secs = err.unlock_seconds or 180
+        self.update_interval = timedelta(seconds=min(secs + 5, 300))
+        raise UpdateFailed(str(err)) from err
+
+
+class HikvisionHealthCoordinator(_LockAwareCoordinator):
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: HikvisionISAPIClient
     ) -> None:
+        self._base_interval = timedelta(seconds=HEALTH_POLL_INTERVAL_S)
         super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}_health",
-            update_interval=timedelta(seconds=HEALTH_POLL_INTERVAL_S),
+            hass, _LOGGER, name=f"{DOMAIN}_health", update_interval=self._base_interval
         )
         self.entry = entry
         self.client = client
 
     async def _async_update_data(self) -> HealthData:
+        self._guard_lock()
         try:
             raw = await self.client.async_get_caps(EP_ACS_WORK_STATUS)
         except HikvisionLockoutError as err:
-            # transient — the terminal's brute-force lock; keep retrying
-            raise UpdateFailed(str(err)) from err
+            self._on_lockout(err)
         except HikvisionAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except HikvisionError as err:
@@ -83,31 +101,29 @@ _RINGING = {"ring", "ringing", "calling", "bell"}
 _ON_CALL = {"oncall", "incall", "talking", "answered"}
 
 
-class HikvisionCallCoordinator(DataUpdateCoordinator[str]):
-    """Fast poll of the video-intercom call status (doorbell button).
+class HikvisionCallCoordinator(_LockAwareCoordinator):
+    """Poll of the video-intercom call status (doorbell button).
 
-    Fallback for terminals whose call event does not arrive on the alertStream;
-    the poll is cheap (one small GET). State is the raw status string, lowercased
-    ('idle', 'ring', 'oncall', ...).
+    Fallback for terminals whose call event does not arrive on the alertStream.
+    State is the raw status string, lowercased ('idle', 'ring', 'oncall', ...).
     """
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: HikvisionISAPIClient
     ) -> None:
+        self._base_interval = timedelta(seconds=CALL_POLL_INTERVAL_S)
         super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}_call",
-            update_interval=timedelta(seconds=CALL_POLL_INTERVAL_S),
+            hass, _LOGGER, name=f"{DOMAIN}_call", update_interval=self._base_interval
         )
         self.entry = entry
         self.client = client
 
     async def _async_update_data(self) -> str:
+        self._guard_lock()
         try:
             status = await self.client.async_get_call_status()
         except HikvisionLockoutError as err:
-            raise UpdateFailed(str(err)) from err
+            self._on_lockout(err)
         except HikvisionError as err:
             raise UpdateFailed(str(err)) from err
         return (status or "idle").strip().lower()

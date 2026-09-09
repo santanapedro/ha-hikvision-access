@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 from hikvision_access.api import HikvisionISAPIClient, _Digest, _xml_to_dict
-from hikvision_access.exceptions import HikvisionLockoutError, HikvisionProtocolError
+from hikvision_access.exceptions import HikvisionProtocolError
 
 CHALLENGE = (
     'Digest qop="auth", realm="DS-6E392E44", '
@@ -66,38 +66,42 @@ def test_lockout_detection():
         "<userCheck><statusValue>401</statusValue>"
         "<lockStatus>lock</lockStatus><unlockTime>111</unlockTime></userCheck>"
     )
-    with pytest.raises(HikvisionLockoutError) as exc:
-        HikvisionISAPIClient._raise_if_locked(body)
-    assert exc.value.unlock_seconds == 111
+    assert HikvisionISAPIClient._parse_lock_seconds(body) == 111
 
 
 def test_no_lockout_on_normal_body():
-    HikvisionISAPIClient._raise_if_locked("<DeviceInfo><model>X</model></DeviceInfo>")
+    assert (
+        HikvisionISAPIClient._parse_lock_seconds("<DeviceInfo><model>X</model></DeviceInfo>")
+        is None
+    )
 
 
 def test_unlock_status_alone_is_not_a_lockout():
     # "<lockStatus>unlock</lockStatus>" contains the substring "lock"
-    HikvisionISAPIClient._raise_if_locked(
-        "<userCheck><lockStatus>unlock</lockStatus><unlockTime>0</unlockTime></userCheck>"
+    assert (
+        HikvisionISAPIClient._parse_lock_seconds(
+            "<userCheck><lockStatus>unlock</lockStatus><unlockTime>0</unlockTime></userCheck>"
+        )
+        is None
     )
 
 
 def test_retry_login_counter_is_treated_as_lockout():
-    # the terminal reporting a failed-login counter -> back off, don't burn
-    # another attempt (that is what trips the real lock)
-    with pytest.raises(HikvisionLockoutError):
-        HikvisionISAPIClient._raise_if_locked(
-            "<userCheck><isActivated>true</isActivated>"
-            "<lockStatus>unlock</lockStatus><unlockTime>0</unlockTime>"
-            "<retryLoginTime>4</retryLoginTime></userCheck>"
-        )
+    assert HikvisionISAPIClient._parse_lock_seconds(
+        "<userCheck><isActivated>true</isActivated>"
+        "<lockStatus>unlock</lockStatus><unlockTime>0</unlockTime>"
+        "<retryLoginTime>4</retryLoginTime></userCheck>"
+    ) == 180
 
 
 def test_plain_challenge_body_is_not_a_lockout():
-    HikvisionISAPIClient._raise_if_locked(
-        "<userCheck><statusValue>401</statusValue>"
-        "<statusString>Unauthorized</statusString>"
-        "<isActivated>false</isActivated></userCheck>"
+    assert (
+        HikvisionISAPIClient._parse_lock_seconds(
+            "<userCheck><statusValue>401</statusValue>"
+            "<statusString>Unauthorized</statusString>"
+            "<isActivated>false</isActivated></userCheck>"
+        )
+        is None
     )
 
 

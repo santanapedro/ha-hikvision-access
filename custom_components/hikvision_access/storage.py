@@ -300,9 +300,15 @@ class EventStore:
         person_id: str | None = None,
         limit: int = 50,
         before: tuple[str, str] | None = None,  # (timestamp, event_uid) cursor
+        access_only: bool = False,
     ) -> list[dict[str, Any]]:
         clauses: list[str] = []
         params: list[Any] = []
+        if access_only:
+            # exclude pure door relay/contact events (no person, unknown result)
+            clauses.append(
+                "(person_id IS NOT NULL OR access_result IN ('granted','denied'))"
+            )
         if device_id:
             clauses.append("device_id=?")
             params.append(device_id)
@@ -331,6 +337,24 @@ class EventStore:
         def _q() -> list[dict[str, Any]]:
             assert self._conn
             return [dict(r) for r in self._conn.execute(sql, params).fetchall()]
+
+        return await self._run(_q)
+
+    async def async_events_missing_pictures(
+        self, device_id: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
+        """Newest events that have a pictureURL but no downloaded file yet."""
+
+        def _q() -> list[dict[str, Any]]:
+            assert self._conn
+            rows = self._conn.execute(
+                "SELECT event_uid, event_picture_url, timestamp FROM events "
+                "WHERE device_id=? AND event_picture_url IS NOT NULL "
+                "AND event_picture_path IS NULL "
+                "ORDER BY timestamp DESC LIMIT ?",
+                (device_id, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
 
         return await self._run(_q)
 

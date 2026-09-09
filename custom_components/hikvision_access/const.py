@@ -56,8 +56,9 @@ EVENT_IDLE_TIMEOUT_S: Final = 90
 HEALTH_POLL_INTERVAL_S: Final = 30
 
 # doorbell / call-status polling (fallback for terminals where the call event
-# does not arrive on the alertStream)
-CALL_POLL_INTERVAL_S: Final = 3
+# does not arrive on the alertStream). Kept modest: every poll is 2 requests
+# and this firmware locks logins under load.
+CALL_POLL_INTERVAL_S: Final = 10
 DEFAULT_RTSP_PORT: Final = 554
 
 # --- reconnect backoff for the alertStream listener (spec §9.2) ---

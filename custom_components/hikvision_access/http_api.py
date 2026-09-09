@@ -95,6 +95,7 @@ class EventsView(HomeAssistantView):
         names = {
             rt.info.serial_number: rt.gateway.device_name for rt in targets.values()
         }
+        access_only = q.get("all", "").lower() not in ("1", "true", "yes")
         merged: list[dict] = []
         for rt in targets.values():
             merged += await rt.store.async_query_events(
@@ -104,6 +105,7 @@ class EventsView(HomeAssistantView):
                 person_id=q.get("person_id"),
                 limit=limit,
                 before=before,
+                access_only=access_only,
             )
         merged.sort(key=lambda r: (r["timestamp"], r["event_uid"]), reverse=True)
         merged = merged[:limit]

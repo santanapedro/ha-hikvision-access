@@ -145,5 +145,25 @@ class EventReconciler:
                 self._device_id,
                 highest,
             )
+        await self._backfill_pictures()
         await self._store.async_set_meta("last_reconcile", dt_util.utcnow().isoformat())
         return new_count
+
+    async def _backfill_pictures(self, batch: int = 15) -> None:
+        """Download a few event photos that were skipped earlier (rate limit)."""
+        images = self._gateway.images
+        if images is None:
+            return
+        rows = await self._store.async_events_missing_pictures(self._device_id, batch)
+        for row in rows:
+            await asyncio.sleep(_PAGE_PAUSE_S)
+            try:
+                path = await images.async_fetch_event_image_url(
+                    row["event_uid"], row["event_picture_url"], row["timestamp"]
+                )
+            except HikvisionError:
+                break  # locked / rate-limited — try again next run
+            if path:
+                await self._store.async_update_event_fields(
+                    row["event_uid"], event_picture_path=path
+                )
