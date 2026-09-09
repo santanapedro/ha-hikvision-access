@@ -27,7 +27,8 @@ from .gateway import EventGateway
 _LOGGER = logging.getLogger(__name__)
 
 _SERIAL_OVERLAP = 5          # re-fetch the last few serials each run
-_MAX_PAGES_PER_RUN = 200     # safety cap (~6000 events)
+_MAX_PAGES_PER_RUN = 40      # ~1200 events/run; more runs catch up gently
+_PAGE_PAUSE_S = 0.5          # breathe between pages so we don't flood the terminal
 _FIRST_RUN_LOOKBACK_DAYS = 7
 
 
@@ -99,15 +100,22 @@ class EventReconciler:
         new_count = 0
         highest = max_serial or 0
 
-        for _ in range(_MAX_PAGES_PER_RUN):
-            page = await self._client.async_search_acs_events(
-                search_id,
-                start_iso,
-                end_iso,
-                position=position,
-                max_results=ACS_EVENT_MAX_RESULTS,
-                begin_serial_no=begin_serial,
-            )
+        for page_no in range(_MAX_PAGES_PER_RUN):
+            if page_no:
+                await asyncio.sleep(_PAGE_PAUSE_S)
+            try:
+                page = await self._client.async_search_acs_events(
+                    search_id,
+                    start_iso,
+                    end_iso,
+                    position=position,
+                    max_results=ACS_EVENT_MAX_RESULTS,
+                    begin_serial_no=begin_serial,
+                )
+            except HikvisionError as err:
+                # keep whatever we imported; next run resumes from max serial
+                _LOGGER.debug("reconcile paused at page %d: %s", page_no, err)
+                break
             infos = page.get("InfoList") or []
             if not infos:
                 break
@@ -119,8 +127,11 @@ class EventReconciler:
                     door_name=self._door_name,
                     mask_card=self._gateway.mask_card,
                 )
-                if await self._gateway.async_handle(event, source="reconcile"):
-                    new_count += 1
+                try:
+                    if await self._gateway.async_handle(event, source="reconcile"):
+                        new_count += 1
+                except HikvisionError:
+                    pass  # e.g. a picture fetch hit the rate limit; keep going
                 with contextlib.suppress(TypeError, ValueError):
                     highest = max(highest, int(item.get("serialNo", 0)))
             position += len(infos)

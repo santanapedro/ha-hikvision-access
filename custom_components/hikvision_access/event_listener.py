@@ -19,7 +19,12 @@ from homeassistant.core import HomeAssistant
 from .api import HikvisionISAPIClient
 from .const import EVENT_IDLE_TIMEOUT_S, RECONNECT_BACKOFF_S
 from .event_parser import parse_boundary, parse_stream_envelope, split_stream_buffer
-from .exceptions import HikvisionAuthError, HikvisionError, HikvisionLockoutError
+from .exceptions import (
+    HikvisionAuthError,
+    HikvisionError,
+    HikvisionLockoutError,
+    HikvisionStreamBusyError,
+)
 from .gateway import EventGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +79,12 @@ class EventListener:
             try:
                 await self._connect_and_read()
                 attempt = 0
+            except HikvisionStreamBusyError as err:
+                # a prior alertStream slot is still held; the reconciler keeps
+                # events flowing meanwhile — wait well clear of the fast cadence
+                self._fail(err, level=logging.WARNING)
+                self._gateway.listener_state = "degraded"
+                await self._sleep(120)
             except HikvisionLockoutError as err:
                 # never hammer a terminal that is counting failed logins
                 self._fail(err, level=logging.WARNING)

@@ -36,5 +36,14 @@ class HikvisionUnsupportedError(HikvisionError):
     """The terminal does not support a required capability/endpoint."""
 
 
+class HikvisionStreamBusyError(HikvisionConnectionError):
+    """alertStream returned 404 — a previous connection's slot is still held.
+
+    Some firmwares hold an alertStream slot for a long time after the client
+    disconnects and 404 every new connection until it frees. Back off well
+    beyond the normal reconnect cadence; the reconciler covers events meanwhile.
+    """
+
+
 class HikvisionProtocolError(HikvisionError):
     """The terminal answered, but the payload could not be understood."""
