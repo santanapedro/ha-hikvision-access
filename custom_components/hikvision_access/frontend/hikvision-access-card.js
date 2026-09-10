@@ -13,7 +13,7 @@
  *   compact:  boolean   (smaller rows)
  */
 
-const VERSION = "0.2.7";
+const VERSION = "0.3.0";
 
 // Event fields (person_name, door_name, device_name, event_uid) come from the
 // terminal and are rendered via innerHTML — always escape them.
@@ -337,7 +337,7 @@ customElements.define("hikvision-access-card", HikvisionAccessCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "hikvision-access-card",
-  name: "Hikvision Access — Timeline",
+  name: "AVANT — Timeline de Acessos",
   description: "Linha do tempo de acessos com foto, pessoa, método e resultado.",
   preview: false,
 });

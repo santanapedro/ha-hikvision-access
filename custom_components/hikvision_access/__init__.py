@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +17,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -32,6 +33,7 @@ from .const import (
     DATA_PUSH_SLOT,
     DATA_PUSH_TOKEN,
     DEFAULT_CALL_POLL_INTERVAL_S,
+    DEFAULT_EVENT_RETENTION_DAYS,
     DEFAULT_EVENT_ROUTE,
     DEFAULT_IMAGE_RETENTION_DAYS,
     DEFAULT_RECONCILE_INTERVAL_S,
@@ -40,6 +42,7 @@ from .const import (
     EP_DOOR_PARAM,
     OPT_ALSO_RUN_STREAM,
     OPT_CALL_POLL_INTERVAL,
+    OPT_EVENT_RETENTION_DAYS,
     OPT_EVENT_ROUTE,
     OPT_IMAGE_RETENTION_DAYS,
     OPT_RECONCILE_INTERVAL,
@@ -108,7 +111,7 @@ def _get_push_view(hass: HomeAssistant) -> HikvisionPushView:
 
 
 _CARD_URL = "/hikvision_access_frontend/hikvision-access-card.js"
-_CARD_VERSION = "0.2.7"
+_CARD_VERSION = "0.3.0"
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
@@ -265,6 +268,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
     )
     entry.runtime_data = runtime
 
+    scheme = "https" if data[CONF_USE_HTTPS] else "http"
+    std_port = 443 if data[CONF_USE_HTTPS] else 80
+    host_part = (
+        data[CONF_HOST]
+        if data[CONF_PORT] == std_port
+        else f"{data[CONF_HOST]}:{data[CONF_PORT]}"
+    )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, info.serial_number)},
@@ -273,6 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
         name=entry.title,
         sw_version=info.firmware,
         serial_number=info.serial_number,
+        configuration_url=f"{scheme}://{host_part}",
     )
 
     # frontend API + Lovelace card (once) + push view target
@@ -288,12 +299,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
         token, gateway, info.serial_number, info.serial_number, door_name
     )
 
+    issue_id = f"push_slot_conflict_{entry.entry_id}"
     if route == "push" and opts.get(OPT_REGISTER_PUSH_ON_DEVICE, False):
         try:
             slot = await async_claim_slot(hass, client, token)
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, DATA_PUSH_SLOT: slot}
             )
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
         except (HikvisionError, Exception) as err:  # noqa: BLE001
             _LOGGER.warning(
                 "não foi possível registrar o push no terminal %s: %s — "
@@ -301,13 +314,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
                 info.serial_number,
                 err,
             )
-    elif route == "push":
-        _LOGGER.info(
-            "rota 'push' selecionada mas 'registrar push no terminal' está "
-            "desligado. Habilite nas opções ou aponte um slot httpHosts para "
-            "%s manualmente.",
-            token,
-        )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="push_slot_conflict",
+                translation_placeholders={"name": entry.title},
+            )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        if route == "push":
+            _LOGGER.info(
+                "rota 'push' selecionada mas 'registrar push no terminal' está "
+                "desligado. Habilite nas opções ou aponte um slot httpHosts para "
+                "%s manualmente.",
+                token,
+            )
 
     await async_setup_services(hass)
 
@@ -320,7 +344,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
 
     @callback
     def _schedule_purge(_now) -> None:
-        hass.async_create_task(_daily_purge(runtime))
+        hass.async_create_task(_daily_purge(runtime, entry))
 
     unsubs.append(
         async_track_time_interval(hass, _schedule_purge, timedelta(hours=6))
@@ -338,13 +362,36 @@ async def _read_door_name(client: HikvisionISAPIClient) -> str | None:
     return node.get("doorName") or None
 
 
-async def _daily_purge(runtime: HikvisionAccessRuntime) -> None:
+async def _daily_purge(
+    runtime: HikvisionAccessRuntime, entry: HikvisionAccessEntry
+) -> None:
+    changed = False
     try:
         removed = await runtime.images.async_purge(runtime.store)
         if removed:
             _LOGGER.info("purged %d expired image(s)", removed)
+            changed = True
     except Exception:
         _LOGGER.exception("image purge failed")
+
+    days = int(
+        entry.options.get(OPT_EVENT_RETENTION_DAYS, DEFAULT_EVENT_RETENTION_DAYS)
+    )
+    if days > 0:
+        cutoff = (datetime.now(UTC) - timedelta(days=days)).isoformat()
+        try:
+            gone = await runtime.store.async_purge_events_before(cutoff)
+            if gone:
+                _LOGGER.info("purged %d expired event row(s)", gone)
+                changed = True
+        except Exception:
+            _LOGGER.exception("event purge failed")
+
+    if changed:
+        try:
+            await runtime.store.async_vacuum()
+        except Exception:
+            _LOGGER.debug("vacuum after purge failed", exc_info=True)
 
 
 async def _async_reload_on_update(
@@ -365,6 +412,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) -
     view: HikvisionPushView | None = hass.data.get(DOMAIN, {}).get(_PUSH_VIEW)
     if view and token:
         view.unregister_target(token)
+
+    ir.async_delete_issue(hass, DOMAIN, f"push_slot_conflict_{entry.entry_id}")
 
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:

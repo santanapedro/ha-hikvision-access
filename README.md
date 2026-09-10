@@ -1,4 +1,4 @@
-# Hikvision Access — integração Home Assistant
+# AVANT - Integração Facial Hikvision (Home Assistant)
 
 Integração **local-first** (sem nuvem) para terminais Hikvision de **controle de
 acesso** da linha MinMoe (DS-K1T3xx), via ISAPI. Recebe eventos de acesso em
@@ -31,8 +31,8 @@ Legenda: ✅ testado · 🧪 código pronto, aguardando teste no hardware · ⚠
 ## Instalação (HACS)
 
 1. HACS → Integrações → menu → *Repositórios personalizados* → `https://github.com/santanapedro/ha-hikvision-access` (categoria: Integração).
-2. Instale "Hikvision Access" e reinicie o Home Assistant.
-3. *Configurações → Dispositivos e Serviços → Adicionar integração → Hikvision Access*.
+2. Instale "AVANT - Integração Facial Hikvision" e reinicie o Home Assistant.
+3. *Configurações → Dispositivos e Serviços → Adicionar integração → AVANT - Integração Facial Hikvision*.
 
 ## Rotas de evento
 
@@ -47,10 +47,12 @@ Nos dois casos, `AcsEvent` é consultado periodicamente para reconciliar (spec �
 
 - **Disco**: as fotos ficam em `<config>/hikvision_access/<entry_id>/media/` (nunca em
   `/config/www`), particionadas por mês, purgadas a cada 6 h conforme
-  **Retenção de imagens** (padrão 90 dias; `0` = ilimitado). Estimativa: ~40 KB por
-  acesso — com ~50 acessos/dia e 90 dias, ~180 MB por terminal. O banco SQLite
-  (`hikvision_access.db`, separado do recorder do HA) é pequeno, **a menos que**
-  você ligue *Salvar payload bruto do evento* (deixe desligado salvo para depurar).
+  **Retenção de imagens** (padrão 365 dias; `0` = ilimitado). Estimativa: ~40 KB por
+  acesso — com ~50 acessos/dia e 1 ano, ~730 MB por terminal. As **linhas de evento**
+  no SQLite (`hikvision_access.db`, separado do recorder do HA) seguem a **Retenção de
+  eventos no histórico** (padrão 365 dias); depois da purga o banco é compactado
+  (`VACUUM`). Ligar *Salvar payload bruto do evento* aumenta bastante o banco — deixe
+  desligado salvo para depurar.
 - **Rede/CPU**: cada chamada ISAPI faz um desafio Digest novo (2 requisições) para
   não esbarrar no anti-brute-force do terminal. Em regime normal: `alertStream`
   aberto + reconciliação a cada 60 s + status da porta a cada 30 s. Se o terminal

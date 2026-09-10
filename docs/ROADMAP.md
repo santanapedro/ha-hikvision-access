@@ -3,7 +3,7 @@
 Ordem de prioridade da spec (§ INSTRUÇÃO FINAL): confiabilidade de evento →
 pessoa → horário → permitido/negado → foto → abrir porta → histórico → UI.
 
-**Estado atual: v0.2.8 — Fases 1 e 2 completas, em produção** em dois
+**Estado atual: v0.3.0 — Fases 1 e 2 completas, em produção** em dois
 DS-K1T342MWX (FW V4.48.40).
 
 ---
@@ -71,27 +71,26 @@ DS-K1T342MWX (FW V4.48.40).
 
 ## Melhorias candidatas (backlog priorizado)
 
+### Feito em v0.3.0
+
+- [x] **`async_step_reconfigure`** — trocar endereço/credenciais sem readicionar
+- [x] **Repair issue** para conflito de slot de push (`push_slot_conflict`)
+- [x] **`configuration_url`** no dispositivo (link para a UI web do terminal)
+- [x] **Retenção de eventos** (`event_retention_days`, padrão 365) + `VACUUM` após purga
+- [x] `PRAGMA synchronous=NORMAL`
+- [x] `web.FileResponse` nas views de imagem (streaming + cache)
+- [x] Cache de TTL curto (5 s) no snapshot da câmera
+- [x] Testes para as novas rotinas de storage e `PersonManager`
+
 ### Alta — qualidade de integração HA
 
-- [ ] **`async_step_reconfigure`** — hoje não dá para trocar host/porta/HTTPS sem
-      remover e readicionar a integração (`supports_reconfigure: false`)
 - [ ] **Descoberta automática** — SADP (UDP 37020) ou WS-Discovery/ONVIF → o terminal
       aparece sozinho em *Dispositivos e Serviços*
-- [ ] **Repair issues** (`ir.async_create_issue`) para estados acionáveis: lockout
-      persistente, conflito de slot de push, `alertStream` preso — em vez de só log
-- [ ] **`configuration_url`** no `DeviceInfo` (link para a UI web do terminal)
 - [ ] **Device triggers/conditions** para automações ("quando fulano tiver acesso concedido")
-
-### Alta — retenção e armazenamento
-
-- [ ] **Retenção de eventos** (linhas do SQLite) — hoje só as fotos são purgadas; as
-      linhas de evento nunca são apagadas e o banco cresce para sempre
-- [ ] `PRAGMA synchronous=NORMAL` (seguro com WAL) + `VACUUM` periódico após purga
+- [ ] Repair issue também para lockout persistente
 
 ### Média — segurança e robustez
 
-- [ ] `web.FileResponse` no lugar de `read_bytes()` nas views de imagem (streaming,
-      cache, suporte a Range) — hoje cada request carrega o arquivo inteiro na memória
 - [ ] Rotação do token de push (serviço/botão) — hoje é fixo pela vida da entry
 - [ ] Opção de **pinar o fingerprint do certificado** do terminal, alternativa ao
       `verify_ssl` ligado/desligado
@@ -101,13 +100,11 @@ DS-K1T342MWX (FW V4.48.40).
 ### Média — performance
 
 - [ ] Fundir os polls de health e callStatus num só ciclo (ambos batem no terminal)
-- [ ] Cache de TTL curto no snapshot da câmera (HA busca a still da entidade
-      periodicamente quando um dashboard mostra o card)
 
 ### Média — cobertura de testes
 
 - [ ] Testes para `gateway._maybe_upgrade`, reconciliador (widening por serial),
-      `push` (fila cheia, token), views do `http_api`, config flow (reauth/options)
+      `push` (fila cheia, token), views do `http_api`, config flow (reauth/reconfigure)
 - [ ] Gate de cobertura no CI
 - [ ] `mypy`/`pyright` estrito + `py.typed`
 
@@ -117,7 +114,7 @@ DS-K1T342MWX (FW V4.48.40).
 - [ ] Lista virtualizada para históricos grandes
 - [ ] Blueprint de automação "notificar com foto no acesso/negado"
 - [ ] `CHANGELOG.md` (keep-a-changelog), `CONTRIBUTING.md`
-- [ ] PR ao `home-assistant/brands` (logo/ícone) — check "brands" do HACS está ignorado no CI
+- [ ] PR ao `home-assistant/brands` (logo/ícone AVANT) — check "brands" do HACS está ignorado no CI
 - [ ] Submeter ao repositório default do HACS
 
 ## Pendências de hardware (ver fim de `docs/DISCOVERY-DS-K1T342MWX.md`)

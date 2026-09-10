@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Hikvision Access",
+        "title": "AVANT — Hikvision Face Access",
         "description": "Details of the access-control terminal on your local network.",
         "data": {
           "host": "IP address or hostname",
@@ -21,6 +21,18 @@
           "username": "ISAPI user",
           "password": "Password"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure terminal",
+        "description": "Change this terminal's address or credentials. Leave the password blank to keep it.",
+        "data": {
+          "host": "IP address or hostname",
+          "port": "Port",
+          "username": "ISAPI user",
+          "password": "Password (blank = keep)",
+          "use_https": "Use HTTPS",
+          "verify_ssl": "Verify SSL certificate"
+        }
       }
     },
     "error": {
@@ -33,13 +45,20 @@
     "abort": {
       "already_configured": "This terminal is already configured.",
       "reauth_successful": "Credentials updated.",
+      "reconfigure_successful": "Terminal reconfigured.",
       "wrong_device": "The terminal that answered has a different serial number; check the address."
+    }
+  },
+  "issues": {
+    "push_slot_conflict": {
+      "title": "Terminal notification slot is full ({name})",
+      "description": "The 'push' route is selected with 'Register push on the terminal' enabled, but every httpHosts slot on the terminal is already in use (including cloud/EHome). The integration keeps working through periodic reconciliation. To use push, free a slot on the terminal or switch the route to 'stream' in the integration options."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Options — Hikvision Access",
+        "title": "Options — AVANT Hikvision Face Access",
         "description": "The 'push' route needs the terminal to POST events to Home Assistant; enable 'Register push on the terminal' to claim a free httpHosts slot automatically.",
         "data": {
           "event_route": "Event route (push recommended)",
@@ -47,6 +66,7 @@
           "also_run_stream": "Also keep the alertStream running",
           "reconcile_interval_s": "Reconciliation interval (s)",
           "image_retention_days": "Image retention (days, 0 = unlimited)",
+          "event_retention_days": "History event retention (days, 0 = unlimited)",
           "store_granted_images": "Store images of granted access",
           "store_denied_images": "Store images of denied access",
           "store_raw_payload": "Store raw event payload",

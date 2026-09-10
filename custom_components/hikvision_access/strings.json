@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Hikvision Access",
+        "title": "AVANT — Integração Facial Hikvision",
         "description": "Dados do terminal de controle de acesso na rede local.",
         "data": {
           "host": "Endereço IP ou hostname",
@@ -21,6 +21,18 @@
           "username": "Usuário ISAPI",
           "password": "Senha"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar terminal",
+        "description": "Altere o endereço ou as credenciais deste terminal. Deixe a senha em branco para mantê-la.",
+        "data": {
+          "host": "Endereço IP ou hostname",
+          "port": "Porta",
+          "username": "Usuário ISAPI",
+          "password": "Senha (em branco = manter)",
+          "use_https": "Usar HTTPS",
+          "verify_ssl": "Validar certificado SSL"
+        }
       }
     },
     "error": {
@@ -33,13 +45,20 @@
     "abort": {
       "already_configured": "Este terminal já está configurado.",
       "reauth_successful": "Credenciais atualizadas.",
+      "reconfigure_successful": "Terminal reconfigurado.",
       "wrong_device": "O terminal que respondeu tem outro número de série; verifique o endereço."
+    }
+  },
+  "issues": {
+    "push_slot_conflict": {
+      "title": "Slot de notificação do terminal ocupado ({name})",
+      "description": "A rota 'push' está selecionada e 'Registrar push no terminal' está ligado, mas todos os slots httpHosts do terminal já estão em uso (inclusive nuvem/EHome). A integração continua funcionando pela reconciliação periódica. Para usar o push, libere um slot no terminal ou troque a rota para 'stream' nas opções da integração."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Opções — Hikvision Access",
+        "title": "Opções — AVANT Facial Hikvision",
         "description": "A rota 'push' precisa que o terminal envie eventos ao Home Assistant; ligue 'Registrar push no terminal' para configurar um slot livre automaticamente.",
         "data": {
           "event_route": "Rota de eventos (push recomendado)",
@@ -50,6 +69,7 @@
           "call_poll_interval_s": "Intervalo de checagem da campainha (s)",
           "reconcile_interval_s": "Intervalo de reconciliação (s)",
           "image_retention_days": "Retenção de imagens (dias, 0 = ilimitado)",
+          "event_retention_days": "Retenção de eventos no histórico (dias, 0 = ilimitado)",
           "store_granted_images": "Salvar fotos de acessos permitidos",
           "store_denied_images": "Salvar fotos de acessos negados",
           "store_raw_payload": "Salvar payload bruto do evento",

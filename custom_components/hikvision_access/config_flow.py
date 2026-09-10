@@ -31,6 +31,7 @@ from .const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     DEFAULT_CALL_POLL_INTERVAL_S,
+    DEFAULT_EVENT_RETENTION_DAYS,
     DEFAULT_EVENT_ROUTE,
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
@@ -43,12 +44,14 @@ from .const import (
     DOMAIN,
     MAX_CALL_POLL_INTERVAL_S,
     MAX_RECONCILE_INTERVAL_S,
+    MAX_RETENTION_DAYS,
     MIN_CALL_POLL_INTERVAL_S,
     MIN_RECONCILE_INTERVAL_S,
     OPT_ALSO_RUN_STREAM,
     OPT_CALL_POLL_INTERVAL,
     OPT_CREATE_OPEN_DOOR_BUTTON,
     OPT_ENABLE_CAMERA,
+    OPT_EVENT_RETENTION_DAYS,
     OPT_EVENT_ROUTE,
     OPT_IMAGE_RETENTION_DAYS,
     OPT_MASK_CARD_NUMBER,
@@ -204,6 +207,67 @@ class HikvisionAccessConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": entry.data.get(CONF_HOST, "")},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the terminal's address / credentials without re-adding it."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry is not None
+        errors: dict[str, str] = {}
+        cur = entry.data
+
+        if user_input is not None:
+            use_https = user_input.get(CONF_USE_HTTPS, cur[CONF_USE_HTTPS])
+            data = {
+                **cur,
+                CONF_HOST: user_input[CONF_HOST].strip(),
+                CONF_PORT: int(
+                    user_input.get(
+                        CONF_PORT,
+                        DEFAULT_HTTPS_PORT if use_https else DEFAULT_HTTP_PORT,
+                    )
+                ),
+                CONF_USERNAME: user_input[CONF_USERNAME].strip(),
+                CONF_USE_HTTPS: use_https,
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, cur[CONF_VERIFY_SSL]),
+            }
+            if user_input.get(CONF_PASSWORD):
+                data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            try:
+                info, _caps = await _probe(self.hass, data)
+            except HikvisionLockoutError:
+                errors["base"] = "lockout"
+            except HikvisionAuthError:
+                errors["base"] = "invalid_auth"
+            except HikvisionTimeoutError:
+                errors["base"] = "timeout"
+            except HikvisionConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error reconfiguring %s", data[CONF_HOST])
+                errors["base"] = "unknown"
+            else:
+                if entry.unique_id and info.serial_number != entry.unique_id:
+                    return self.async_abort(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry, data=data, reason="reconfigure_successful"
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=cur[CONF_HOST]): str,
+                    vol.Optional(CONF_PORT, default=cur[CONF_PORT]): int,
+                    vol.Required(CONF_USERNAME, default=cur[CONF_USERNAME]): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                    vol.Optional(CONF_USE_HTTPS, default=cur[CONF_USE_HTTPS]): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=cur[CONF_VERIFY_SSL]): bool,
+                }
+            ),
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> HikvisionAccessOptionsFlow:
@@ -217,6 +281,7 @@ def _default_options() -> dict[str, Any]:
         OPT_ALSO_RUN_STREAM: False,
         OPT_RECONCILE_INTERVAL: DEFAULT_RECONCILE_INTERVAL_S,
         OPT_IMAGE_RETENTION_DAYS: DEFAULT_IMAGE_RETENTION_DAYS,
+        OPT_EVENT_RETENTION_DAYS: DEFAULT_EVENT_RETENTION_DAYS,
         OPT_STORE_GRANTED_IMAGES: True,
         OPT_STORE_DENIED_IMAGES: True,
         OPT_STORE_RAW_PAYLOAD: False,
@@ -264,7 +329,11 @@ class HikvisionAccessOptionsFlow(OptionsFlow):
                     vol.Required(
                         OPT_IMAGE_RETENTION_DAYS,
                         default=opts[OPT_IMAGE_RETENTION_DAYS],
-                    ): vol.All(int, vol.Range(min=0, max=3650)),
+                    ): vol.All(int, vol.Range(min=0, max=MAX_RETENTION_DAYS)),
+                    vol.Required(
+                        OPT_EVENT_RETENTION_DAYS,
+                        default=opts[OPT_EVENT_RETENTION_DAYS],
+                    ): vol.All(int, vol.Range(min=0, max=MAX_RETENTION_DAYS)),
                     vol.Required(
                         OPT_STORE_GRANTED_IMAGES,
                         default=opts[OPT_STORE_GRANTED_IMAGES],

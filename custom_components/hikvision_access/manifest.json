@@ -1,6 +1,6 @@
 {
   "domain": "hikvision_access",
-  "name": "Hikvision Access",
+  "name": "AVANT - Integração Facial Hikvision",
   "after_dependencies": ["frontend"],
   "codeowners": ["@santanapedro"],
   "config_flow": true,
@@ -10,5 +10,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/santanapedro/ha-hikvision-access/issues",
   "requirements": [],
-  "version": "0.2.8"
+  "version": "0.3.0"
 }

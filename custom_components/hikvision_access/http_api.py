@@ -139,7 +139,9 @@ class EventImageView(HomeAssistantView):
     url = "/api/hikvision_access/events/{event_uid}/image"
     name = "api:hikvision_access:event-image"
 
-    async def get(self, request: web.Request, event_uid: str) -> web.Response:
+    async def get(
+        self, request: web.Request, event_uid: str
+    ) -> web.StreamResponse:
         hass = request.app["hass"]
         for rt in _runtimes(hass).values():
             row = await rt.store.async_get_event(event_uid)
@@ -154,7 +156,7 @@ class PersonImageView(HomeAssistantView):
 
     async def get(
         self, request: web.Request, entry_id: str, person_id: str
-    ) -> web.Response:
+    ) -> web.StreamResponse:
         hass = request.app["hass"]
         store, _ = _resolve_store(hass, entry_id)
         if store is None:
@@ -166,15 +168,20 @@ class PersonImageView(HomeAssistantView):
         return web.Response(status=404)
 
 
-async def _serve_image(hass: HomeAssistant, path: str) -> web.Response:
-    def _read() -> bytes | None:
-        p = Path(path)
-        return p.read_bytes() if p.is_file() else None
-
-    data = await hass.async_add_executor_job(_read)
-    if not data:
+async def _serve_image(hass: HomeAssistant, path: str) -> web.StreamResponse:
+    p = Path(path)
+    if not await hass.async_add_executor_job(p.is_file):
         return web.Response(status=404)
-    return web.Response(body=data, content_type="image/jpeg")
+    # FileResponse streams from disk and adds Last-Modified / ETag / Range,
+    # so repeat views (lightbox, scroll-back) are cheap and don't buffer the
+    # whole JPEG in memory.
+    return web.FileResponse(
+        p,
+        headers={
+            "Content-Type": "image/jpeg",
+            "Cache-Control": "private, max-age=86400",
+        },
+    )
 
 
 def _public(

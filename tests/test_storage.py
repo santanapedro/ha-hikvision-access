@@ -35,6 +35,28 @@ async def test_max_serial_tracks_highest(store):
     assert await store.async_max_serial("d1") == 42
 
 
+async def test_purge_events_before_and_vacuum(store):
+    old = datetime(2020, 1, 1, tzinfo=UTC)
+    recent = datetime.now(UTC)
+    for i in range(4):
+        await store.async_insert_event(
+            _event(f"d1:{i}", str(i), old + timedelta(seconds=i), access_result="granted")
+        )
+    await store.async_insert_event(
+        _event("d1:99", "99", recent, access_result="granted")
+    )
+
+    cutoff = (datetime.now(UTC) - timedelta(days=365)).isoformat()
+    removed = await store.async_purge_events_before(cutoff)
+    assert removed == 4
+
+    left = await store.async_query_events(device_id="d1")
+    assert [r["event_uid"] for r in left] == ["d1:99"]
+
+    await store.async_vacuum()  # must not raise
+    assert (await store.async_query_events(device_id="d1"))[0]["event_uid"] == "d1:99"
+
+
 async def test_oldest_missing_url_serial(store):
     now = datetime.now(UTC)
     since = (now - timedelta(days=2)).isoformat()

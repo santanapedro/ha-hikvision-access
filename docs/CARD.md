@@ -5,7 +5,7 @@ precisa adicionar recurso no Lovelace nem instalar nada à parte.
 
 ## Adicionar ao painel
 
-Editar painel → *Adicionar card* → procurar **"Hikvision Access — Timeline"**,
+Editar painel → *Adicionar card* → procurar **"AVANT — Timeline de Acessos"**,
 ou colar YAML:
 
 ```yaml

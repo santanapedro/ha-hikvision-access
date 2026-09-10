@@ -30,6 +30,7 @@ OPT_ALSO_RUN_STREAM: Final = "also_run_stream"
 OPT_ENABLE_CAMERA: Final = "enable_camera"
 OPT_RTSP_PORT: Final = "rtsp_port"
 OPT_CALL_POLL_INTERVAL: Final = "call_poll_interval_s"
+OPT_EVENT_RETENTION_DAYS: Final = "event_retention_days"
 
 # stored in the config entry after we successfully claim a push slot
 DATA_PUSH_TOKEN: Final = "push_token"
@@ -48,7 +49,9 @@ MIN_RECONCILE_INTERVAL_S: Final = 30
 MAX_RECONCILE_INTERVAL_S: Final = 900
 RECONCILE_OVERLAP_S: Final = 120
 
-DEFAULT_IMAGE_RETENTION_DAYS: Final = 90
+DEFAULT_IMAGE_RETENTION_DAYS: Final = 365
+DEFAULT_EVENT_RETENTION_DAYS: Final = 365
+MAX_RETENTION_DAYS: Final = 3650
 DEFAULT_REQUEST_TIMEOUT_S: Final = 10
 STREAM_CONNECT_TIMEOUT_S: Final = 15
 EVENT_IDLE_TIMEOUT_S: Final = 90

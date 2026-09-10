@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
@@ -14,6 +15,8 @@ from .entity import HikvisionAccessEntity
 from .exceptions import HikvisionError
 
 _LOGGER = logging.getLogger(__name__)
+
+_SNAPSHOT_TTL_S = 5  # HA re-fetches the still for the entity picture; don't hammer the terminal
 
 
 async def async_setup_entry(
@@ -38,6 +41,8 @@ class HikvisionAccessCamera(HikvisionAccessEntity, Camera):
         self._client = client
         self._rtsp_port = rtsp_port
         self._attr_unique_id = f"{self._base_unique_id}_camera"
+        self._snap: bytes | None = None
+        self._snap_at = 0.0
 
     async def stream_source(self) -> str | None:
         return self._client.rtsp_url(CALL_CHANNEL_MAIN, self._rtsp_port)
@@ -45,8 +50,12 @@ class HikvisionAccessCamera(HikvisionAccessEntity, Camera):
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
+        if self._snap is not None and time.monotonic() - self._snap_at < _SNAPSHOT_TTL_S:
+            return self._snap
         try:
-            return await self._client.async_get_snapshot(CALL_CHANNEL_MAIN)
+            self._snap = await self._client.async_get_snapshot(CALL_CHANNEL_MAIN)
+            self._snap_at = time.monotonic()
         except HikvisionError as err:
             _LOGGER.debug("snapshot failed: %s", err)
-            return None
+            return self._snap
+        return self._snap

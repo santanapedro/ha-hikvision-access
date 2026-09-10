@@ -97,6 +97,7 @@ class EventStore:
         )
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA synchronous=NORMAL")  # safe with WAL, much faster
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(_SCHEMA)
         row = self._conn.execute("SELECT version FROM schema_version").fetchone()
@@ -446,6 +447,33 @@ class EventStore:
             return paths
 
         return await self._run(_purge)
+
+    async def async_purge_events_before(self, cutoff_iso: str) -> int:
+        """Delete event rows older than cutoff. Returns how many were removed.
+
+        Picture files for those rows should already be gone (image retention is
+        <= event retention); any leftover files are swept by the ImageManager's
+        orphan pass.
+        """
+
+        def _purge() -> int:
+            assert self._conn
+            cur = self._conn.execute(
+                "DELETE FROM events WHERE timestamp < ?", (cutoff_iso,)
+            )
+            return cur.rowcount or 0
+
+        return await self._run(_purge)
+
+    async def async_vacuum(self) -> None:
+        """Reclaim space after a purge (WAL checkpoint + VACUUM)."""
+
+        def _vac() -> None:
+            assert self._conn
+            self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            self._conn.execute("VACUUM")
+
+        await self._run(_vac)
 
     # ---- internals ------------------------------------------------
 
