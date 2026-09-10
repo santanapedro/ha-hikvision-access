@@ -71,6 +71,12 @@ DS-K1T342MWX (FW V4.48.40).
 
 ## Melhorias candidatas (backlog priorizado)
 
+### Feito em v0.3.2
+
+- [x] **Modo tolerante para vídeo-porteiros (KV95xx)** — setup não falha sem
+      `AcsWorkStatus`; health degrada, sensores de porta não são criados,
+      reconciliação desligada sem `AcsEvent`. Câmera + campainha + stream seguem.
+
 ### Feito em v0.3.0
 
 - [x] **`async_step_reconfigure`** — trocar endereço/credenciais sem readicionar

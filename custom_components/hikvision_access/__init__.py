@@ -215,7 +215,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
     await gateway.async_restore()
 
     health = HikvisionHealthCoordinator(hass, entry, client)
-    await health.async_config_entry_first_refresh()
+    if capabilities.door_status:
+        await health.async_config_entry_first_refresh()
+    else:
+        # a device without AcsWorkStatus (video door station) must not block
+        # setup on the health poll — take whatever it gives, best-effort
+        await health.async_refresh()
 
     call: HikvisionCallCoordinator | None = None
     if capabilities.intercom:
@@ -351,7 +356,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # start realtime + periodic work only after entities exist
-    await reconciler.async_start()
+    if capabilities.access_event_search:
+        await reconciler.async_start()
+    else:
+        _LOGGER.info(
+            "%s não expõe AcsEvent — reconciliação desligada, só o stream em tempo real",
+            info.serial_number,
+        )
     if listener is not None:
         listener.start()
 

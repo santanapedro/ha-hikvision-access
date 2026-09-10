@@ -24,7 +24,12 @@ from .const import (
     EP_ACS_WORK_STATUS,
     HEALTH_POLL_INTERVAL_S,
 )
-from .exceptions import HikvisionAuthError, HikvisionError, HikvisionLockoutError
+from .exceptions import (
+    HikvisionAuthError,
+    HikvisionError,
+    HikvisionLockoutError,
+    HikvisionUnsupportedError,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +81,10 @@ class HikvisionHealthCoordinator(_LockAwareCoordinator):
         self._guard_lock()
         try:
             raw = await self.client.async_get_caps(EP_ACS_WORK_STATUS)
+        except HikvisionUnsupportedError:
+            # a video door station (e.g. DS-KV95xx) has no AcsWorkStatus — it is
+            # still reachable, we just can't report relay/contact/tamper state
+            return HealthData(reachable=True)
         except HikvisionLockoutError as err:
             self._on_lockout(err)
         except HikvisionAuthError as err:

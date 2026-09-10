@@ -56,9 +56,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     rt = entry.runtime_data
+    # "door" and "tamper" come from AcsWorkStatus — a video door station has no
+    # such endpoint, so only "online" is universal.
+    descriptions = (
+        DESCRIPTIONS
+        if rt.capabilities.door_status
+        else tuple(d for d in DESCRIPTIONS if d.key == "online")
+    )
     entities: list = [
         HikvisionBinarySensor(entry.entry_id, rt.info, rt.health, desc)
-        for desc in DESCRIPTIONS
+        for desc in descriptions
     ]
     if rt.call is not None:
         entities.append(
@@ -80,13 +87,15 @@ class HikvisionBinarySensor(
 
     @property
     def is_on(self) -> bool | None:
-        return self.entity_description.value_fn(self.coordinator.data)
+        data = self.coordinator.data
+        return None if data is None else self.entity_description.value_fn(data)
 
     @property
     def available(self) -> bool:
         if self.entity_description.key == "online":
             return True
-        return super().available and self.coordinator.data.reachable
+        data = self.coordinator.data
+        return super().available and data is not None and data.reachable
 
 
 class HikvisionDoorbellSensor(

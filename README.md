@@ -14,12 +14,19 @@ local e permite abertura remota da porta.
 
 ## Testado
 
-| Modelo | Firmware | Eventos | Histórico | Foto do evento | Foto cadastrada | Abrir porta | Estado porta |
-|---|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| DS-K1T342MWX | V3.16.1 | ✅¹ | ✅ | ✅ | ✅ | 🧪 | 🧪 |
+| Modelo | Tipo | Firmware | Eventos | Histórico | Foto | Abrir porta | Estado porta | Câmera | Campainha |
+|---|---|---|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| DS-K1T342MWX | terminal de acesso | V4.48.40 | ✅ | ✅ | ✅ | 🧪 | ✅ | ✅ | ✅ |
+| DS-KV95xx | vídeo-porteiro | — | ⚠ | ❌ | ⚠ | 🧪 | ❌ | 🧪 | 🧪 |
 
-Legenda: ✅ testado · 🧪 código pronto, aguardando teste no hardware · ⚠ parcial · ❌ não suportado
-¹ acesso permitido (face) e ciclo de porta confirmados no histórico; evento negado ao vivo ainda não capturado.
+Legenda: ✅ testado · 🧪 código pronto, aguardando teste · ⚠ parcial/depende do firmware · ❌ não aplicável
+
+**Vídeo-porteiros (linha KV)**: a integração **carrega em modo tolerante** — sem
+`AcsWorkStatus`/`AcsEvent` ela não cria os sensores de porta nem roda a
+reconciliação, mas mantém câmera, campainha e os eventos que chegam pelo
+`alertStream`. Não é o alvo principal (use o add-on *Hikvision Doorbell* para
+recursos completos de porteiro); rode `python tools/discovery.py --host <ip>` e
+abra uma issue com o `summary.json` para calibrarmos os códigos de evento.
 
 ## Requisitos no terminal
 

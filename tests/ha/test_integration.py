@@ -139,6 +139,77 @@ async def test_setup_and_unload(hass: HomeAssistant, _bypass_probe) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_setup_video_door_station(hass: HomeAssistant) -> None:
+    """A device with no AcsWorkStatus / AcsEvent (e.g. DS-KV95xx door station)
+    must still load — camera + doorbell — without blocking on the health poll."""
+    from custom_components.hikvision_access.exceptions import HikvisionUnsupportedError
+
+    info = DeviceInfo(
+        model="DS-KV9503-WBE1", serial_number="KVSERIAL9", firmware="V2.2.0",
+        device_name="PORTEIRA CLIENTE", device_type="videoIntercom",
+    )
+    caps = DeviceCapabilities(
+        event_stream=True, push_notification=True, access_event_search=False,
+        door_status=False, video=True, intercom=True,
+    )
+
+    with (
+        patch(
+            "custom_components.hikvision_access.HikvisionISAPIClient.async_get_device_info",
+            AsyncMock(return_value=info),
+        ),
+        patch(
+            "custom_components.hikvision_access.async_discover",
+            AsyncMock(return_value=caps),
+        ),
+        patch(
+            "custom_components.hikvision_access._read_door_name",
+            AsyncMock(return_value=None),
+        ),
+        patch(
+            "custom_components.hikvision_access.coordinator.HikvisionISAPIClient.async_get_caps",
+            AsyncMock(side_effect=HikvisionUnsupportedError("AcsWorkStatus")),
+        ),
+        patch(
+            "custom_components.hikvision_access.coordinator.HikvisionISAPIClient.async_get_call_status",
+            AsyncMock(return_value="idle"),
+        ),
+        patch("custom_components.hikvision_access.EventListener.start"),
+        patch(
+            "custom_components.hikvision_access.event_listener.EventListener.async_stop",
+            AsyncMock(),
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Porteira",
+            unique_id="KVSERIAL9",
+            data={
+                CONF_HOST: "192.0.2.20", CONF_PORT: 443, CONF_USERNAME: "ha",
+                CONF_PASSWORD: "x", CONF_USE_HTTPS: True, CONF_VERIFY_SSL: False,
+            },
+            options={"event_route": "stream"},
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+
+        uids = {
+            e.unique_id
+            for e in er.async_get(hass).entities.get_entries_for_config_entry_id(
+                entry.entry_id
+            )
+        }
+        assert any(u.endswith("_camera") for u in uids)
+        assert any(u.endswith("_doorbell") for u in uids)
+        assert any(u.endswith("_online") for u in uids)
+        assert not any(u.endswith("_door") for u in uids)  # no AcsWorkStatus
+        assert not any(u.endswith("_tamper") for u in uids)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+
+
 async def test_config_flow_happy_path(hass: HomeAssistant, _bypass_probe) -> None:
     info, caps = _bypass_probe
     with patch(
