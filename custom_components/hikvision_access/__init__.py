@@ -141,9 +141,22 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         _LOGGER.warning("could not register the Lovelace card", exc_info=True)
 
 
+def _migrate_options(hass: HomeAssistant, entry: HikvisionAccessEntry) -> dict:
+    """One-shot: pre-0.3.0 entries carry the old 90-day image retention and no
+    event retention. Bring untouched entries up to the 1-year defaults."""
+    opts = dict(entry.options)
+    if OPT_EVENT_RETENTION_DAYS in opts:
+        return opts
+    if opts.get(OPT_IMAGE_RETENTION_DAYS) == 90:  # the old default, never changed
+        opts[OPT_IMAGE_RETENTION_DAYS] = DEFAULT_IMAGE_RETENTION_DAYS
+    opts[OPT_EVENT_RETENTION_DAYS] = DEFAULT_EVENT_RETENTION_DAYS
+    hass.config_entries.async_update_entry(entry, options=opts)
+    return opts
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: HikvisionAccessEntry) -> bool:
     data = entry.data
-    opts = entry.options
+    opts = _migrate_options(hass, entry)
     session = async_get_clientsession(hass, verify_ssl=data[CONF_VERIFY_SSL])
     client = HikvisionISAPIClient(
         session,
