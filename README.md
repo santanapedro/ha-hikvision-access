@@ -5,13 +5,12 @@ acesso** da linha MinMoe (DS-K1T3xx), via ISAPI. Recebe eventos de acesso em
 tempo real, identifica a pessoa, o método, o resultado e a foto, mantém histórico
 local e permite abertura remota da porta.
 
-> **Status: Fase 1 completa (backend).** Cliente ISAPI, descoberta de capacidades,
-> config flow, armazenamento SQLite, parser, reconciliador, listener alertStream,
-> rota push, gerenciador de imagens/pessoas, entidades de acesso e serviços — todos
-> prontos. Validado contra um **DS-K1T342MWX (FW V3.16.1)** real (pipeline de
-> reconciliação: 1522 eventos importados, dedupe e download de fotos OK) e todos os
-> módulos importam contra o Home Assistant. Falta: card Lovelace (Fase 2), gestão
-> de pessoas (Fase 3). Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
+> **Status: Fases 1 e 2 completas, em produção.** Backend (cliente ISAPI, descoberta
+> de capacidades, config flow + reauth, SQLite, parser, reconciliador, listener
+> alertStream, rota push, imagens/pessoas, entidades, serviços) **e** UI (card
+> Lovelace com timeline/filtros/live, câmera RTSP, sensor de campainha) prontos e
+> rodando contra dois **DS-K1T342MWX (FW V4.48.40)** reais. Próximo: gestão de
+> pessoas (Fase 3). Ver [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Testado
 
