@@ -17,3 +17,4 @@ venv/
 # HA test venv (local only)
 .venv-ha/
 .venv*/
+brand/out/
