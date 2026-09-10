@@ -195,17 +195,17 @@ async def test_setup_video_door_station(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
 
-        uids = {
-            e.unique_id
-            for e in er.async_get(hass).entities.get_entries_for_config_entry_id(
-                entry.entry_id
-            )
-        }
+        ents = er.async_get(hass).entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        )
+        uids = {e.unique_id for e in ents}
         assert any(u.endswith("_camera") for u in uids)
         assert any(u.endswith("_doorbell") for u in uids)
         assert any(u.endswith("_online") for u in uids)
-        assert not any(u.endswith("_door") for u in uids)  # no AcsWorkStatus
-        assert not any(u.endswith("_tamper") for u in uids)
+        # no AcsWorkStatus -> no door contact / tamper binary sensors
+        bs_uids = {e.unique_id for e in ents if e.domain == "binary_sensor"}
+        assert not any(u.endswith("_door") for u in bs_uids)
+        assert not any(u.endswith("_tamper") for u in bs_uids)
 
         assert await hass.config_entries.async_unload(entry.entry_id)
 
