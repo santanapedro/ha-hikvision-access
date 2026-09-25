@@ -40,3 +40,25 @@ WS  hikvision_access/subscribe
 
 Tudo local — as fotos são servidas de `<config>/hikvision_access/<entry>/media/`
 por rota autenticada, nunca de URL pública.
+
+## "Custom element doesn't exist: hikvision-access-card"
+
+O registro automático (`add_extra_js_url`) injeta o `<script>` do card no
+`index.html` que o servidor manda pra cada cliente. Funciona assim que o
+cliente pede uma página nova — mas um cliente que guardou aquele HTML em
+cache de **antes** da integração carregar nunca chega a ver o elemento. É
+por isso que o sintoma costuma ser "funciona no navegador, não no app
+Companion" (o app mantém a sessão da WebView por muito mais tempo e cacheia
+mais agressivo) — nunca "não funciona em lugar nenhum" (isso seria a
+integração não tendo carregado).
+
+Correção rápida: force-fechar e reabrir o app; se persistir, limpar o
+**cache** do app (Android: Ajustes → Apps → Home Assistant → Armazenamento →
+Limpar cache — não "limpar dados"; iOS: reinstalar).
+
+Correção definitiva: adicionar o card como **Recurso Lovelace** de verdade
+em vez de depender só do `index.html` —
+*Configurações → Painéis → ⋮ → Recursos → Adicionar recurso* → URL
+`/hikvision_access_frontend/hikvision-access-card.js` → tipo **Módulo
+JavaScript**. Um recurso assim é buscado a cada carregamento do painel via
+WebSocket (depois que o app já abriu), então não sofre desse cache do shell.
