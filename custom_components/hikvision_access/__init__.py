@@ -111,7 +111,7 @@ def _get_push_view(hass: HomeAssistant) -> HikvisionPushView:
 
 
 _CARD_URL = "/hikvision_access_frontend/hikvision-access-card.js"
-_CARD_VERSION = "0.3.0"
+_CARD_VERSION = "0.3.1"
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:

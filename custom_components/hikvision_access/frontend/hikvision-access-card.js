@@ -5,15 +5,17 @@
  * itself; add `type: custom:hikvision-access-card` to a dashboard.
  *
  * Config:
- *   entry_id: string   (optional — omit to merge every terminal)
- *   title:    string
- *   limit:    number    (default 30, per page)
- *   range:    "today" | "7d" | "30d" | "all"   (default "today")
- *   result:   "all" | "granted" | "denied"     (default "all")
- *   compact:  boolean   (smaller rows)
+ *   entry_id:   string   (optional — omit to merge every terminal)
+ *   title:      string
+ *   limit:      number    (default 30, per page)
+ *   range:      "today" | "7d" | "30d" | "all"   (default "today")
+ *   result:     "all" | "granted" | "denied"     (default "all")
+ *   compact:    boolean   (smaller rows)
+ *   max_height: number | 0   (px — the row list scrolls internally past this
+ *               height; header/filters/footer stay put. Default 420, 0 = off)
  */
 
-const VERSION = "0.3.0";
+const VERSION = "0.3.1";
 
 // Event fields (person_name, door_name, device_name, event_uid) come from the
 // terminal and are rendered via innerHTML — always escape them.
@@ -66,7 +68,7 @@ class HikvisionAccessCard extends HTMLElement {
   }
 
   setConfig(config) {
-    this._config = { limit: 30, ...config };
+    this._config = { limit: 30, max_height: 420, ...config };
     if (config.range) this._filters.range = config.range;
     if (config.result) this._filters.result = config.result;
     this._render();
@@ -82,7 +84,15 @@ class HikvisionAccessCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 3 + Math.min(this._events.length, 8);
+    const rowH = this._config?.compact ? 44 : 60;
+    const maxH = this._config?.max_height;
+    // header + search + footer, plus however many rows actually fit before
+    // the list starts scrolling internally (capped list height doesn't grow
+    // the masonry column past that point)
+    const visibleRows = maxH
+      ? Math.min(this._events.length, Math.ceil(maxH / rowH))
+      : Math.min(this._events.length, 8);
+    return 3 + visibleRows;
   }
 
   disconnectedCallback() {
@@ -201,7 +211,7 @@ class HikvisionAccessCard extends HTMLElement {
           <ha-icon icon="mdi:magnify"></ha-icon>
           <input id="person" placeholder="Filtrar por ID de pessoa" value="${esc(this._filters.person)}">
         </div>
-        <div class="list ${compact}">
+        <div class="list ${compact}" ${c.max_height ? `style="max-height:${Number(c.max_height)}px;overflow-y:auto"` : ""}>
           ${this._error ? `<div class="empty err">${esc(this._error)}</div>` : ""}
           ${!this._error && !this._events.length && !this._loading
             ? `<div class="empty">Nenhum acesso no período.</div>` : ""}
@@ -296,7 +306,9 @@ const STYLE = `
 .person ha-icon { --mdc-icon-size:18px; color:var(--secondary-text-color); }
 .person input { flex:1; border:0; outline:0; background:transparent; padding:6px 0;
   color:var(--primary-text-color); font-size:.9rem; }
-.list { display:flex; flex-direction:column; }
+.list { display:flex; flex-direction:column; scrollbar-width:thin; }
+.list::-webkit-scrollbar { width:6px; }
+.list::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb-color, var(--divider-color)); border-radius:3px; }
 .row { display:flex; align-items:center; gap:12px; padding:10px 16px;
   border-top:1px solid var(--divider-color); }
 .list .row:first-child { border-top:0; }

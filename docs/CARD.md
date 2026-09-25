@@ -16,6 +16,8 @@ title: Acessos
 # range: today                # today | 7d | 30d | all
 # result: all                 # all | granted | denied
 # compact: false
+# max_height: 420             # px — só a lista de registros rola; cabeçalho e
+                               # filtros ficam fixos. 0 desliga (lista cresce livre)
 ```
 
 ## O que mostra
